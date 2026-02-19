@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>JNTU Topper Analyzer V6 FINAL</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script>
+function show(id){
+["main","rank","pass","failed"].forEach(x=>document.getElementById(x).style.display="none");
+document.getElementById(id).style.display="block";
+}
+</script>
+</head>
+<body>
+<div class="container">
+<h1 class="text-center mt-3">JNTU Topper Analyzer V6 FINAL</h1>
+<form method="POST" enctype="multipart/form-data">
+<input type="file" name="file" required class="form-control">
+<button class="btn btn-primary mt-2">Upload</button>
+<a href="/download" class="btn btn-success mt-2">Download Excel</a>
+</form><br>
+<button onclick="show('main')" class="btn btn-secondary">Main List</button>
+<button onclick="show('rank')" class="btn btn-info">Rankwise List</button>
+<button onclick="show('pass')" class="btn btn-warning">Subject Pass %</button>
+<button onclick="show('failed')" class="btn btn-danger">Failed Students</button>
+<div id="main">{{ tables.result|safe }}</div>
+<div id="rank" style="display:none"><h3>Rank by Marks</h3>{{ tables.rank_marks|safe }}<h3>Rank by SGPA</h3>{{ tables.rank_sgpa|safe }}</div>
+<div id="pass" style="display:none">{{ tables.subject_pass|safe }}</div>
+<div id="failed" style="display:none">{{ tables.failed|safe }}</div>
+</div>
+</body>
+</html>
