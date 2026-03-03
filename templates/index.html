@@ -1,31 +1,429 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<title>JNTU Topper Analyzer V6 FINAL</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<script>
-function show(id){
-["main","rank","pass","failed"].forEach(x=>document.getElementById(x).style.display="none");
-document.getElementById(id).style.display="block";
-}
-</script>
+  <title>JNTU Topper Analyzer V6 FINAL</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+    /* ===== MORNING (LIGHT) MODE — default ===== */
+    :root {
+      --bg: linear-gradient(135deg, #e8f0fe 0%, #f0e6ff 50%, #fce4ec 100%);
+      --text: #2d3748;
+      --heading: #1a237e;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --card-border: rgba(0, 0, 0, 0.08);
+      --card-shadow: rgba(0, 0, 0, 0.06);
+      --chart-card-bg: #fff;
+      --chart-card-border: #e2e8f0;
+      --chart-label: #4a5568;
+      --table-text: #2d3748;
+      --table-border: #cbd5e0;
+      --table-td-bg: rgba(255, 255, 255, 0.7);
+      --table-stripe: rgba(102, 126, 234, 0.05);
+      --input-bg: #fff;
+      --input-border: #cbd5e0;
+      --input-text: #2d3748;
+      --section-title: #4a148c;
+      --hr-color: rgba(0, 0, 0, 0.1);
+      --axis-color: #4a5568;
+      --grid-color: rgba(0, 0, 0, 0.06);
+      --toggle-bg: #667eea;
+      --toggle-icon: "🌙";
+    }
+
+    /* ===== NIGHT (DARK) MODE ===== */
+    [data-theme="night"] {
+      --bg: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 50%, #24243e 100%);
+      --text: #e0e0e0;
+      --heading: #a5b4fc;
+      --card-bg: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --card-shadow: rgba(0, 0, 0, 0.3);
+      --chart-card-bg: rgba(255, 255, 255, 0.08);
+      --chart-card-border: rgba(255, 255, 255, 0.1);
+      --chart-label: #b0b0e0;
+      --table-text: #e0e0e0;
+      --table-border: rgba(255, 255, 255, 0.15);
+      --table-td-bg: rgba(255, 255, 255, 0.04);
+      --table-stripe: rgba(102, 126, 234, 0.1);
+      --input-bg: rgba(255, 255, 255, 0.08);
+      --input-border: rgba(255, 255, 255, 0.15);
+      --input-text: #fff;
+      --section-title: #b39ddb;
+      --hr-color: rgba(255, 255, 255, 0.1);
+      --axis-color: #aaa;
+      --grid-color: rgba(255, 255, 255, 0.06);
+      --toggle-bg: #ffc107;
+      --toggle-icon: "☀️";
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      transition: background 0.4s ease, color 0.3s ease;
+    }
+
+    .container {
+      max-width: 1200px;
+    }
+
+    h1 {
+      color: var(--heading);
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      transition: color 0.3s ease;
+    }
+
+    /* Toggle button */
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      background: var(--toggle-bg);
+      color: #fff;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav-btns .btn {
+      margin: 4px;
+      border-radius: 20px;
+      font-weight: 600;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-btns .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-glass {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 24px var(--card-shadow);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .chart-card {
+      background: var(--chart-card-bg);
+      border: 1px solid var(--chart-card-border);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .chart-card h5 {
+      color: var(--chart-label);
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .pie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .bar-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    table,
+    .table {
+      color: var(--table-text) !important;
+    }
+
+    .table-bordered,
+    .table-bordered th,
+    .table-bordered td {
+      border-color: var(--table-border) !important;
+    }
+
+    .table th {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff !important;
+      font-weight: 600;
+    }
+
+    .table td {
+      background: var(--table-td-bg) !important;
+      color: var(--table-text) !important;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) td {
+      background: var(--table-stripe) !important;
+    }
+
+    .form-control {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--input-text);
+      border-radius: 10px;
+      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    .form-control:focus {
+      background: var(--input-bg);
+      color: var(--input-text);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
+      border-color: #667eea;
+    }
+
+    .section-title {
+      color: var(--section-title);
+      font-weight: 700;
+      margin: 25px 0 15px;
+      transition: color 0.3s ease;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    /* Charts button fix for light mode */
+    .btn-outline-dark {
+      border-color: var(--text);
+      color: var(--text);
+    }
+
+    .btn-outline-dark:hover {
+      background: var(--text);
+      color: var(--card-bg);
+    }
+  </style>
+  <script>
+    function show(id) {
+      ["main", "rank", "pass", "failed", "charts"].forEach(x => document.getElementById(x).style.display = "none");
+      document.getElementById(id).style.display = "block";
+    }
+
+    // Store all chart instances for dynamic theme updates
+    var allPieCharts = [];
+    var barChartInstance = null;
+
+    function getThemeColors() {
+      var s = getComputedStyle(document.documentElement);
+      return {
+        label: s.getPropertyValue('--chart-label').trim(),
+        axis: s.getPropertyValue('--axis-color').trim(),
+        grid: s.getPropertyValue('--grid-color').trim()
+      };
+    }
+
+    function updateChartColors() {
+      var c = getThemeColors();
+      // Update pie chart legends
+      allPieCharts.forEach(function (chart) {
+        chart.options.plugins.legend.labels.color = c.label;
+        chart.update();
+      });
+      // Update bar chart axes + grid
+      if (barChartInstance) {
+        barChartInstance.options.scales.y.ticks.color = c.axis;
+        barChartInstance.options.scales.y.grid.color = c.grid;
+        barChartInstance.options.scales.x.ticks.color = c.axis;
+        barChartInstance.update();
+      }
+    }
+
+    function toggleTheme() {
+      var html = document.documentElement;
+      var btn = document.getElementById("themeToggle");
+      if (html.getAttribute("data-theme") === "night") {
+        html.removeAttribute("data-theme");
+        btn.textContent = "🌙";
+        localStorage.setItem("theme", "morning");
+      } else {
+        html.setAttribute("data-theme", "night");
+        btn.textContent = "☀️";
+        localStorage.setItem("theme", "night");
+      }
+      // Re-apply chart colors after theme switch
+      setTimeout(updateChartColors, 50);
+    }
+
+    // Apply saved theme on load
+    (function () {
+      var saved = localStorage.getItem("theme");
+      if (saved === "night") {
+        document.documentElement.setAttribute("data-theme", "night");
+      }
+    })();
+  </script>
 </head>
+
 <body>
-<div class="container">
-<h1 class="text-center mt-3">JNTU Topper Analyzer V6 FINAL</h1>
-<form method="POST" enctype="multipart/form-data">
-<input type="file" name="file" required class="form-control">
-<button class="btn btn-primary mt-2">Upload</button>
-<a href="/download" class="btn btn-success mt-2">Download Excel</a>
-</form><br>
-<button onclick="show('main')" class="btn btn-secondary">Main List</button>
-<button onclick="show('rank')" class="btn btn-info">Rankwise List</button>
-<button onclick="show('pass')" class="btn btn-warning">Subject Pass %</button>
-<button onclick="show('failed')" class="btn btn-danger">Failed Students</button>
-<div id="main">{{ tables.result|safe }}</div>
-<div id="rank" style="display:none"><h3>Rank by Marks</h3>{{ tables.rank_marks|safe }}<h3>Rank by SGPA</h3>{{ tables.rank_sgpa|safe }}</div>
-<div id="pass" style="display:none">{{ tables.subject_pass|safe }}</div>
-<div id="failed" style="display:none">{{ tables.failed|safe }}</div>
-</div>
+  <!-- Theme Toggle Button -->
+  <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
+  <div class="container py-4">
+    <h1 class="text-center mb-4">🎓 JNTU Topper Analyzer V6 FINAL</h1>
+
+    <div class="card-glass">
+      <form method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2 flex-wrap">
+        <input type="file" name="file" required class="form-control" style="max-width:400px">
+        <button class="btn btn-primary">⬆ Upload</button>
+        <a href="/download" class="btn btn-success">⬇ Download Excel</a>
+      </form>
+    </div>
+
+    <div class="nav-btns text-center mb-3">
+      <button onclick="show('main')" class="btn btn-secondary">📋 Main List</button>
+      <button onclick="show('rank')" class="btn btn-info">🏆 Rankwise List</button>
+      <button onclick="show('pass')" class="btn btn-warning">✅ Subject Pass %</button>
+      <button onclick="show('failed')" class="btn btn-danger">❌ Failed Students</button>
+      <button onclick="show('charts')" class="btn btn-outline-dark">📊 Charts</button>
+    </div>
+
+    <div id="main" class="card-glass">{{ tables.result|safe }}</div>
+    <div id="rank" style="display:none" class="card-glass">
+      <h3 class="section-title">Rank by Marks</h3>{{ tables.rank_marks|safe }}
+      <h3 class="section-title">Rank by SGPA</h3>{{ tables.rank_sgpa|safe }}
+    </div>
+    <div id="pass" style="display:none" class="card-glass">{{ tables.subject_pass|safe }}</div>
+    <div id="failed" style="display:none" class="card-glass">{{ tables.failed|safe }}</div>
+
+    <!-- CHARTS SECTION -->
+    <div id="charts" style="display:none" class="card-glass">
+      <h3 class="section-title text-center">📊 Subject-wise Pass Percentage (Pie Charts)</h3>
+      <div id="pie-container" class="pie-grid"></div>
+      <hr style="border-color:var(--hr-color)">
+      <h3 class="section-title text-center">📈 Overall Pass vs Failed (Bar Chart)</h3>
+      <div class="bar-wrapper chart-card">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Set toggle button text based on saved theme
+      var saved = localStorage.getItem("theme");
+      if (saved === "night") {
+        document.getElementById("themeToggle").textContent = "☀️";
+      }
+
+      var chartData = {{ chart_data| safe
+    }};
+    if (!chartData) return;
+
+    var c = getThemeColors();
+
+    // --- PIE CHARTS ---
+    var container = document.getElementById("pie-container");
+    var passPalette = ["#667eea", "#764ba2", "#5c6bc0", "#7c4dff", "#536dfe", "#448aff", "#6c63ff", "#8e24aa"];
+    var failPalette = ["#ef5350", "#ec407a", "#f06292", "#e57373", "#ff7043", "#ff8a65", "#e53935", "#d32f2f"];
+
+    chartData.subjects.forEach(function (subj, i) {
+      var div = document.createElement("div");
+      div.className = "chart-card";
+      div.innerHTML = '<h5>' + subj.name + '</h5><canvas id="pie-' + i + '"></canvas>';
+      container.appendChild(div);
+
+      var passColor = passPalette[i % passPalette.length];
+      var failColor = failPalette[i % failPalette.length];
+
+      var pieChart = new Chart(document.getElementById("pie-" + i), {
+        type: "doughnut",
+        data: {
+          labels: ["Pass (" + subj.passed + ")", "Fail (" + subj.failed + ")"],
+          datasets: [{
+            data: [subj.passed, subj.failed],
+            backgroundColor: [passColor, failColor],
+            borderWidth: 0,
+            hoverOffset: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          cutout: "55%",
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { color: c.label, font: { size: 12, weight: "bold" } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (ctx) {
+                  var total = subj.passed + subj.failed;
+                  var pct = ((ctx.raw / total) * 100).toFixed(1);
+                  return ctx.label + " — " + pct + "%";
+                }
+              }
+            }
+          }
+        }
+      });
+      allPieCharts.push(pieChart);
+    });
+
+    // --- BAR CHART ---
+    barChartInstance = new Chart(document.getElementById("barChart"), {
+      type: "bar",
+      data: {
+        labels: ["Passed", "Failed"],
+        datasets: [{
+          label: "Students",
+          data: [chartData.overall.passed, chartData.overall.failed],
+          backgroundColor: ["rgba(102,126,234,0.85)", "rgba(239,83,80,0.85)"],
+          borderColor: ["#667eea", "#ef5350"],
+          borderWidth: 2,
+          borderRadius: 8,
+          barPercentage: 0.5
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true, ticks: { color: c.axis, font: { size: 12, weight: "bold" } }, grid: { color: c.grid } },
+          x: { ticks: { color: c.axis, font: { size: 14, weight: "bold" } }, grid: { display: false } }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                var total = chartData.overall.passed + chartData.overall.failed;
+                var pct = ((ctx.raw / total) * 100).toFixed(1);
+                return ctx.raw + " students (" + pct + "%)";
+              }
+            }
+          }
+        }
+      }
+    });
+    });
+  </script>
 </body>
+
 </html>

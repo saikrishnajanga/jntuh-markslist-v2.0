@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, send_file
 import pandas as pd
+import json
 import os
 
 app = Flask(__name__)
@@ -110,6 +111,7 @@ def process_file(path):
 def index():
 
     tables={}
+    chart_data=None
 
     if request.method=="POST":
 
@@ -129,7 +131,29 @@ def index():
 
         result.to_excel("uploads/output.xlsx",index=False)
 
-    return render_template("index.html",tables=tables)
+        # Build chart data for frontend
+        subjects_chart = []
+        for _, row in subject_pass.iterrows():
+            passed = int(row["Passed Students"])
+            total = int(row["Total Students"])
+            failed_count = total - passed
+            subjects_chart.append({
+                "name": row["Subject"],
+                "passed": passed,
+                "failed": failed_count,
+                "pass_pct": float(row["Pass %"])
+            })
+
+        total_students = int(subject_pass["Total Students"].iloc[0]) if len(subject_pass) > 0 else 0
+        overall_failed = len(failed)
+        overall_passed = total_students - overall_failed
+
+        chart_data = {
+            "subjects": subjects_chart,
+            "overall": {"passed": overall_passed, "failed": overall_failed}
+        }
+
+    return render_template("index.html", tables=tables, chart_data=json.dumps(chart_data) if chart_data else "null")
 
 
 @app.route("/download")
@@ -139,3 +163,4 @@ def download():
 
 if __name__=="__main__":
     app.run(debug=True)
+
