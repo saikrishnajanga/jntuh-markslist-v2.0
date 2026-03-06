@@ -1,11 +1,36 @@
 from flask import Flask, render_template, request, send_file
+from flask_compress import Compress
 import pandas as pd
 import json
 import os
 
 app = Flask(__name__)
+
+# Enable gzip compression — reduces HTML/CSS/JS response size by 70-80%
+Compress(app)
+app.config['COMPRESS_MIMETYPES'] = [
+    'text/html', 'text/css', 'text/xml',
+    'application/json', 'application/javascript'
+]
+app.config['COMPRESS_MIN_SIZE'] = 500  # Only compress responses > 500 bytes
+
+# Cache static files for 1 hour
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 3600
+
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+@app.after_request
+def add_cache_headers(response):
+    """Add cache headers for better repeat-visit performance."""
+    if 'text/html' in response.content_type:
+        # Don't cache HTML (dynamic content)
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    else:
+        # Cache static assets for 1 hour
+        response.headers['Cache-Control'] = 'public, max-age=3600'
+    return response
 
 def process_file(path):
 
