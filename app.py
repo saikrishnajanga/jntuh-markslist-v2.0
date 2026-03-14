@@ -60,20 +60,25 @@ def process_file(path):
     ).round(2).reset_index()
     sgpa.columns = ["HTNO","SGPA"]
 
-    # THEORY SUBJECT PERCENTAGE (CR >= 3)
-    theory = df[df["CR"] >= 3].copy()
-    theory["Subject %"] = theory["TOTAL"]
+    # Identify theory vs lab subjects
+    subject_cr = credit_subjects.drop_duplicates("SUBJECT")[["SUBJECT","CR"]].copy()
+    theory_names = sorted(subject_cr[subject_cr["CR"] >= 3]["SUBJECT"].tolist())
+    lab_names = sorted(subject_cr[subject_cr["CR"] < 3]["SUBJECT"].tolist())
 
-    subject_percent = theory.pivot(
+    # ALL SUBJECT MARKS pivot
+    all_subs = credit_subjects.copy()
+    all_subs["Subject %"] = all_subs["TOTAL"]
+
+    subject_percent = all_subs.pivot(
         index="HTNO",
         columns="SUBJECT",
         values="Subject %"
     ).round(2).reset_index()
 
-    # OVERALL % based on theory subjects only
-    subject_count = theory.groupby("HTNO").size().reset_index(name="Count")
+    # OVERALL % based on ALL credit subjects (theory + lab)
+    all_subject_count = credit_subjects.groupby("HTNO").size().reset_index(name="Count")
 
-    overall = total_marks.merge(subject_count,on="HTNO")
+    overall = total_marks.merge(all_subject_count, on="HTNO")
 
     overall["Overall %"] = (
         overall["Total Marks"] / (overall["Count"] * 100)
@@ -81,12 +86,19 @@ def process_file(path):
 
     overall = overall[["HTNO","Overall %"]].round(2)
 
-    # MAIN RESULT
+    # MAIN RESULT — reorder columns: S.No, HTNO, Subjects…, Labs…, Total, Overall%, SGPA
     result = subject_percent.merge(total_marks,on="HTNO")
     result = result.merge(overall,on="HTNO")
     result = result.merge(sgpa,on="HTNO")
 
     result.insert(0,"S.No",range(1,len(result)+1))
+
+    ordered_cols = ["S.No","HTNO"] + theory_names + lab_names + ["Total Marks","Overall %","SGPA"]
+    result = result[ordered_cols]
+
+    # Store column grouping info for template
+    result._theory_names = theory_names
+    result._lab_names = lab_names
 
     # RANK TABLES
     rank_df = total_marks.merge(sgpa,on="HTNO")
@@ -148,7 +160,48 @@ def index():
 
         result,failed,rank_marks,rank_sgpa,subject_pass=process_file(path)
 
-        tables["result"]=result.to_html(classes="table table-bordered",index=False)
+        # Build custom HTML table with grouped Subjects/Labs headers
+        theory_names = result._theory_names
+        lab_names = result._lab_names
+        cols = list(result.columns)
+
+        # Build the group header row
+        group_row = '<tr>'
+        # S.No and HTNO get empty top header
+        group_row += '<th rowspan="2">S.No</th>'
+        group_row += '<th rowspan="2">HTNO</th>'
+        # Subjects group
+        if theory_names:
+            group_row += f'<th colspan="{len(theory_names)}" style="text-align:center;background:linear-gradient(135deg,#023e8a,#0077b6);color:#fff;font-size:1rem;letter-spacing:1px;">📚 Subjects</th>'
+        # Labs group
+        if lab_names:
+            group_row += f'<th colspan="{len(lab_names)}" style="text-align:center;background:linear-gradient(135deg,#0096c7,#48cae4);color:#fff;font-size:1rem;letter-spacing:1px;">🔬 Labs</th>'
+        # Summary cols
+        group_row += '<th rowspan="2">Total Marks</th>'
+        group_row += '<th rowspan="2">Overall %</th>'
+        group_row += '<th rowspan="2">SGPA</th>'
+        group_row += '</tr>'
+
+        # Build the subject names header row
+        names_row = '<tr>'
+        for name in theory_names + lab_names:
+            names_row += f'<th>{name}</th>'
+        names_row += '</tr>'
+
+        # Build data rows
+        data_rows = ''
+        for _, row in result.iterrows():
+            data_rows += '<tr>'
+            for col in cols:
+                val = row[col]
+                if pd.isna(val):
+                    val = '-'
+                elif isinstance(val, float) and val == int(val):
+                    val = int(val)
+                data_rows += f'<td>{val}</td>'
+            data_rows += '</tr>'
+
+        tables["result"] = f'<table class="table table-bordered"><thead>{group_row}{names_row}</thead><tbody>{data_rows}</tbody></table>'
         tables["failed"]=failed.to_html(classes="table table-bordered",index=False)
         tables["rank_marks"]=rank_marks.to_html(classes="table table-bordered",index=False)
         tables["rank_sgpa"]=rank_sgpa.to_html(classes="table table-bordered",index=False)

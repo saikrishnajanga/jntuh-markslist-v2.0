@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JNTU Topper Analyzer V6 FINAL</title>
+  <title>JNTU Topper Analyzer V2</title>
 
   <!-- Preconnect to external origins for faster resource fetching -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,63 +19,64 @@
 
   <!-- Chart.js — deferred so it doesn't block HTML parsing -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
-
-    /* ===== MORNING (LIGHT) MODE — default ===== */
+    /* ===== MORNING (LIGHT) MODE — Ocean Blue ===== */
     :root {
-      --bg: linear-gradient(135deg, #e8f0fe 0%, #f0e6ff 50%, #fce4ec 100%);
-      --text: #2d3748;
-      --heading: #1a237e;
-      --card-bg: rgba(255, 255, 255, 0.85);
-      --card-border: rgba(0, 0, 0, 0.08);
-      --card-shadow: rgba(0, 0, 0, 0.06);
+      --bg: linear-gradient(135deg, #e8f4fd 0%, #cce7f6 50%, #dff2fc 100%);
+      --text: #1e3a5f;
+      --heading: #023e8a;
+      --card-bg: #ffffff;
+      --card-border: rgba(0, 119, 182, 0.12);
+      --card-shadow: rgba(0, 119, 182, 0.08);
       --chart-card-bg: #fff;
-      --chart-card-border: #e2e8f0;
-      --chart-label: #4a5568;
-      --table-text: #2d3748;
-      --table-border: #cbd5e0;
-      --table-td-bg: rgba(255, 255, 255, 0.7);
-      --table-stripe: rgba(102, 126, 234, 0.05);
+      --chart-card-border: #b8dff0;
+      --chart-label: #1e3a5f;
+      --table-text: #1e3a5f;
+      --table-border: #b8dff0;
+      --table-td-bg: #ffffff;
+      --table-stripe: #f0f7fc;
       --input-bg: #fff;
-      --input-border: #cbd5e0;
-      --input-text: #2d3748;
-      --section-title: #4a148c;
-      --hr-color: rgba(0, 0, 0, 0.1);
-      --axis-color: #4a5568;
-      --grid-color: rgba(0, 0, 0, 0.06);
-      --toggle-bg: #667eea;
+      --input-border: #b8dff0;
+      --input-text: #1e3a5f;
+      --section-title: #0077b6;
+      --hr-color: rgba(0, 119, 182, 0.15);
+      --axis-color: #1e3a5f;
+      --grid-color: rgba(0, 119, 182, 0.08);
+      --toggle-bg: #0096c7;
       --toggle-icon: "🌙";
     }
 
-    /* ===== NIGHT (DARK) MODE ===== */
+    /* ===== NIGHT (DARK) MODE — Deep Ocean ===== */
     [data-theme="night"] {
-      --bg: linear-gradient(135deg, #0f0c29 0%, #1a1a3e 50%, #24243e 100%);
-      --text: #e0e0e0;
-      --heading: #a5b4fc;
-      --card-bg: rgba(255, 255, 255, 0.06);
-      --card-border: rgba(255, 255, 255, 0.1);
-      --card-shadow: rgba(0, 0, 0, 0.3);
-      --chart-card-bg: rgba(255, 255, 255, 0.08);
-      --chart-card-border: rgba(255, 255, 255, 0.1);
-      --chart-label: #b0b0e0;
-      --table-text: #e0e0e0;
-      --table-border: rgba(255, 255, 255, 0.15);
-      --table-td-bg: rgba(255, 255, 255, 0.04);
-      --table-stripe: rgba(102, 126, 234, 0.1);
-      --input-bg: rgba(255, 255, 255, 0.08);
-      --input-border: rgba(255, 255, 255, 0.15);
-      --input-text: #fff;
-      --section-title: #b39ddb;
-      --hr-color: rgba(255, 255, 255, 0.1);
-      --axis-color: #aaa;
-      --grid-color: rgba(255, 255, 255, 0.06);
+      --bg: linear-gradient(135deg, #0a1628 0%, #112240 50%, #0d1f3c 100%);
+      --text: #cad8e8;
+      --heading: #90e0ef;
+      --card-bg: #0d1b30;
+      --card-border: rgba(0, 180, 216, 0.15);
+      --card-shadow: rgba(0, 0, 0, 0.35);
+      --chart-card-bg: rgba(0, 180, 216, 0.08);
+      --chart-card-border: rgba(0, 180, 216, 0.15);
+      --chart-label: #90e0ef;
+      --table-text: #cad8e8;
+      --table-border: rgba(0, 180, 216, 0.2);
+      --table-td-bg: #0e1f3a;
+      --table-stripe: #112a4a;
+      --input-bg: rgba(0, 180, 216, 0.08);
+      --input-border: rgba(0, 180, 216, 0.2);
+      --input-text: #e0f0ff;
+      --section-title: #48cae4;
+      --hr-color: rgba(0, 180, 216, 0.15);
+      --axis-color: #90e0ef;
+      --grid-color: rgba(0, 180, 216, 0.08);
       --toggle-bg: #ffc107;
       --toggle-icon: "☀️";
     }
 
     body {
       background: var(--bg);
+      background-attachment: fixed;
       color: var(--text);
       font-family: 'Inter', 'Segoe UI', sans-serif;
       min-height: 100vh;
@@ -136,11 +137,11 @@
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 16px;
-      backdrop-filter: blur(12px);
       padding: 20px;
       margin-bottom: 20px;
       box-shadow: 0 4px 24px var(--card-shadow);
       transition: background 0.3s ease, border-color 0.3s ease;
+      overflow: hidden;
     }
 
     .chart-card {
@@ -175,6 +176,10 @@
     table,
     .table {
       color: var(--table-text) !important;
+      background: var(--table-td-bg) !important;
+      border-collapse: collapse;
+      width: 100%;
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
     .table-bordered,
@@ -184,7 +189,7 @@
     }
 
     .table th {
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      background: linear-gradient(135deg, #0077b6, #00b4d8) !important;
       color: #fff !important;
       font-weight: 600;
     }
@@ -192,9 +197,10 @@
     .table td {
       background: var(--table-td-bg) !important;
       color: var(--table-text) !important;
+      transition: background 0.3s ease;
     }
 
-    .table-striped tbody tr:nth-of-type(odd) td {
+    .table tr:nth-child(even) td {
       background: var(--table-stripe) !important;
     }
 
@@ -209,8 +215,8 @@
     .form-control:focus {
       background: var(--input-bg);
       color: var(--input-text);
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.25);
-      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.25);
+      border-color: #0096c7;
     }
 
     .section-title {
@@ -222,6 +228,9 @@
 
     .table-responsive {
       overflow-x: auto;
+      background: var(--table-td-bg);
+      border-radius: 12px;
+      transition: background 0.3s ease;
     }
 
     /* Charts button fix for light mode */
@@ -234,11 +243,68 @@
       background: var(--text);
       color: var(--card-bg);
     }
+
+    .btn-export-pdf {
+      background: linear-gradient(135deg, #0077b6, #00b4d8);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 18px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 2px 8px rgba(0, 119, 182, 0.2);
+      margin-bottom: 12px;
+    }
+
+    .btn-export-pdf:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(0, 119, 182, 0.3);
+    }
+
+    /* ===== RESPONSIVE DESIGN ===== */
+    @media (max-width: 768px) {
+      .container { padding-left: 10px; padding-right: 10px; }
+      h1 { font-size: 1.4rem; }
+      .card-glass { padding: 12px; border-radius: 12px; }
+      .nav-btns .btn { font-size: 0.75rem; padding: 6px 10px; margin: 3px; }
+      .table th, .table td { font-size: 0.75rem; padding: 6px 8px !important; white-space: nowrap; }
+      .btn-export-pdf { font-size: 0.75rem; padding: 6px 12px; }
+      .pie-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .theme-toggle { width: 44px; height: 44px; font-size: 20px; top: 12px; right: 12px; }
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: 1.1rem; }
+      .nav-btns .btn { font-size: 0.7rem; padding: 5px 8px; }
+      .pie-grid { grid-template-columns: 1fr; }
+      .card-glass { padding: 10px; }
+    }
   </style>
   <script>
     function show(id) {
       ["main", "rank", "pass", "failed", "charts"].forEach(x => document.getElementById(x).style.display = "none");
       document.getElementById(id).style.display = "block";
+    }
+
+    function exportPDF(sectionId, filename) {
+      var el = document.getElementById(sectionId);
+      // Hide export button during PDF capture
+      var btn = el.querySelector('.btn-export-pdf');
+      if (btn) btn.style.display = 'none';
+
+      var opt = {
+        margin:       [10, 5, 10, 5],
+        filename:     filename + '.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+        jsPDF:        { unit: 'mm', format: 'a3', orientation: 'landscape' }
+      };
+
+      html2pdf().set(opt).from(el).save().then(function () {
+        if (btn) btn.style.display = '';
+      });
     }
 
     // Store all chart instances for dynamic theme updates
@@ -306,8 +372,8 @@
     <div style="text-align:center;">
       <div style="
         width:48px;height:48px;margin:0 auto 16px;
-        border:4px solid rgba(102,126,234,0.2);
-        border-top:4px solid #667eea;
+        border:4px solid rgba(0,119,182,0.2);
+        border-top:4px solid #0096c7;
         border-radius:50%;
         animation:spin .8s linear infinite;
       "></div>
@@ -316,13 +382,19 @@
       </p>
     </div>
   </div>
-  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  <style>
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+  </style>
 
   <!-- Theme Toggle Button -->
   <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
   <div class="container py-4">
-    <h1 class="text-center mb-4">🎓 JNTU Topper Analyzer V6 FINAL</h1>
+    <h1 class="text-center mb-4">🎓 JNTU Topper Analyzer V2</h1>
 
     <div class="card-glass">
       <form method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2 flex-wrap">
@@ -340,16 +412,29 @@
       <button onclick="show('charts')" class="btn btn-outline-dark">📊 Charts</button>
     </div>
 
-    <div id="main" class="card-glass">{{ tables.result|safe }}</div>
-    <div id="rank" style="display:none" class="card-glass">
-      <h3 class="section-title">Rank by Marks</h3>{{ tables.rank_marks|safe }}
-      <h3 class="section-title">Rank by SGPA</h3>{{ tables.rank_sgpa|safe }}
+    <div id="main" class="card-glass">
+      {% if tables.result %}<button class="btn-export-pdf" onclick="exportPDF('main','Main_List')">📄 Export PDF</button>{% endif %}
+      <div class="table-responsive">{{ tables.result|safe }}</div>
     </div>
-    <div id="pass" style="display:none" class="card-glass">{{ tables.subject_pass|safe }}</div>
-    <div id="failed" style="display:none" class="card-glass">{{ tables.failed|safe }}</div>
+    <div id="rank" style="display:none" class="card-glass">
+      {% if tables.rank_marks %}<button class="btn-export-pdf" onclick="exportPDF('rank','Rankwise_List')">📄 Export PDF</button>{% endif %}
+      <h3 class="section-title">Rank by Marks</h3>
+      <div class="table-responsive">{{ tables.rank_marks|safe }}</div>
+      <h3 class="section-title">Rank by SGPA</h3>
+      <div class="table-responsive">{{ tables.rank_sgpa|safe }}</div>
+    </div>
+    <div id="pass" style="display:none" class="card-glass">
+      {% if tables.subject_pass %}<button class="btn-export-pdf" onclick="exportPDF('pass','Subject_Pass_Percentage')">📄 Export PDF</button>{% endif %}
+      <div class="table-responsive">{{ tables.subject_pass|safe }}</div>
+    </div>
+    <div id="failed" style="display:none" class="card-glass">
+      {% if tables.failed %}<button class="btn-export-pdf" onclick="exportPDF('failed','Failed_Students')">📄 Export PDF</button>{% endif %}
+      <div class="table-responsive">{{ tables.failed|safe }}</div>
+    </div>
 
     <!-- CHARTS SECTION -->
     <div id="charts" style="display:none" class="card-glass">
+      {% if tables.result %}<button class="btn-export-pdf" onclick="exportPDF('charts','Charts')">📄 Export PDF</button>{% endif %}
       <h3 class="section-title text-center">📊 Subject-wise Pass Percentage (Pie Charts)</h3>
       <div id="pie-container" class="pie-grid"></div>
       <hr style="border-color:var(--hr-color)">
@@ -366,7 +451,7 @@
       var overlay = document.getElementById("loadingOverlay");
       if (overlay) {
         overlay.style.opacity = "0";
-        setTimeout(function(){ overlay.remove(); }, 400);
+        setTimeout(function () { overlay.remove(); }, 400);
       }
 
       // Set toggle button text based on saved theme
@@ -383,8 +468,8 @@
 
     // --- PIE CHARTS ---
     var container = document.getElementById("pie-container");
-    var passPalette = ["#667eea", "#764ba2", "#5c6bc0", "#7c4dff", "#536dfe", "#448aff", "#6c63ff", "#8e24aa"];
-    var failPalette = ["#ef5350", "#ec407a", "#f06292", "#e57373", "#ff7043", "#ff8a65", "#e53935", "#d32f2f"];
+    var passPalette = ["#0077b6", "#0096c7", "#00b4d8", "#48cae4", "#0088cc", "#0099dd", "#00a5e0", "#0072a3"];
+    var failPalette = ["#ef5350", "#e53935", "#f06292", "#e57373", "#ff7043", "#ff8a65", "#ec407a", "#d32f2f"];
 
     chartData.subjects.forEach(function (subj, i) {
       var div = document.createElement("div");
@@ -437,8 +522,8 @@
         datasets: [{
           label: "Students",
           data: [chartData.overall.passed, chartData.overall.failed],
-          backgroundColor: ["rgba(102,126,234,0.85)", "rgba(239,83,80,0.85)"],
-          borderColor: ["#667eea", "#ef5350"],
+          backgroundColor: ["rgba(0,150,199,0.85)", "rgba(239,83,80,0.85)"],
+          borderColor: ["#0096c7", "#ef5350"],
           borderWidth: 2,
           borderRadius: 8,
           barPercentage: 0.5
