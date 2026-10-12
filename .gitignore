@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local environment & virtualenvs
+.venv/
+venv/
+env/
+.env
+
+# Editor & IDE artifacts
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary test / scratch files & backups
+*.backup
+templates/rendered_test.html
+scratch*
+
+# Session-generated upload files (keep sample file and output)
+uploads/*_*
+uploads/*.xlsx
+!uploads/Q6-66-III B.Tech. I Semester (R22) Regular.xlsx
+!uploads/output.xlsx

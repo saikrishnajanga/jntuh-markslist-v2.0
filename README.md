@@ -4,13 +4,16 @@ A powerful web-based tool to analyze JNTUH student exam results from Excel files
 
 ## ✨ Features
 
-- **📋 Main Results Table** — Subject-wise marks, total marks, overall %, and SGPA for every student
-- **🏆 Rank Lists** — Students ranked by Total Marks and SGPA
-- **✅ Subject Pass %** — Pass/fail count and percentage for each subject
-- **❌ Failed Students** — List of students with their failed subjects
-- **📊 Interactive Charts** — Doughnut charts per subject + overall pass/fail bar chart
-- **🌙 Dark/Light Mode** — Toggle between morning and night themes
-- **⬇ Excel Download** — Export processed results as `.xlsx`
+- **🎨 Modernized SaaS Design System** — Coordinated color palettes, typography, glassmorphism, and responsive layouts
+- **🚀 Interactive Drag & Drop Upload** — Visual dropzone with file size/format checks and live sample preview (`/demo`)
+- **📋 Enhanced Data Tables** — Multi-row sticky headers, monospace roll numbers, and grade badges
+- **🔍 Instant Search & Quick Filters** — Live real-time search with clear buttons, match counters, and passed/backlogs filtering
+- **🏆 Rank Lists with Medals** — Students ranked by Total Marks and SGPA featuring Gold 🥇, Silver 🥈, and Bronze 🥉 honors
+- **✅ Subject Pass % & Progress Bars** — Pass/fail counts with visual colored progress indicators
+- **❌ Backlogs & Failed Students** — Tagged failed subjects and backlog count pill badges
+- **📊 Interactive Visualizations** — Subject doughnuts, pass vs fail bar charts, SGPA histograms, and top performer charts
+- **🌙 Dynamic Light / Dark Mode** — Morning & Night themes with automatic Chart.js contrast synchronization
+- **📄 PDF & Multi-Sheet Excel Export** — Client-side landscape PDF export (`html2pdf.js`) and multi-sheet detailed `.xlsx` reports
 
 ## 🛠 Tech Stack
 

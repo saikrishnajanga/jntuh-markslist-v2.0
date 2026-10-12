@@ -1,554 +1,2636 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" data-theme="morning">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JNTU Topper Analyzer V2</title>
+  <title>JNTU Topper Analyzer V2 — Academic Results Intelligence</title>
+  <meta name="description" content="State-of-the-art JNTUH Student Results Analyzer for AVIH and ASRA Campuses. Ingest Excel markslists for instant rankings, subject analysis, backlogs tracking, and interactive visualizations.">
 
-  <!-- Preconnect to external origins for faster resource fetching -->
+  <!-- Preconnect to external origins -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
 
-  <!-- Google Fonts — loaded as stylesheet instead of @import for non-blocking rendering -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-  <!-- Bootstrap CSS -->
+  <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-  <!-- Chart.js — deferred so it doesn't block HTML parsing -->
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Chart.js & html2pdf.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
-    /* ===== MORNING (LIGHT) MODE — Ocean Blue ===== */
+    /* ==========================================================================
+       DESIGN SYSTEM & THEME TOKENS
+       ========================================================================== */
     :root {
-      --bg: linear-gradient(135deg, #e8f4fd 0%, #cce7f6 50%, #dff2fc 100%);
-      --text: #1e3a5f;
-      --heading: #023e8a;
-      --card-bg: #ffffff;
-      --card-border: rgba(0, 119, 182, 0.12);
-      --card-shadow: rgba(0, 119, 182, 0.08);
-      --chart-card-bg: #fff;
-      --chart-card-border: #b8dff0;
-      --chart-label: #1e3a5f;
-      --table-text: #1e3a5f;
-      --table-border: #b8dff0;
+      /* Brand Accent Colors */
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-subtle: rgba(37, 99, 235, 0.08);
+      --primary-glow: rgba(37, 99, 235, 0.25);
+      --accent: #0284c7;
+      --accent-gradient: linear-gradient(135deg, #2563eb 0%, #06b6d4 100%);
+
+      /* Status Colors */
+      --success: #10b981;
+      --success-hover: #059669;
+      --success-bg: rgba(16, 185, 129, 0.1);
+      --success-border: rgba(16, 185, 129, 0.25);
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --danger-bg: rgba(239, 68, 68, 0.1);
+      --danger-border: rgba(239, 68, 68, 0.25);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.1);
+      --warning-border: rgba(245, 158, 11, 0.25);
+      --info: #0ea5e9;
+      --info-bg: rgba(14, 165, 233, 0.1);
+      --info-border: rgba(14, 165, 233, 0.25);
+
+      /* Morning (Light) Theme */
+      --bg: #f8fafc;
+      --bg-mesh: radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.05) 0px, transparent 50%),
+                 radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.05) 0px, transparent 50%),
+                 #f8fafc;
+      --surface: #ffffff;
+      --surface-subtle: #f1f5f9;
+      --surface-glass: rgba(255, 255, 255, 0.92);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+      --heading: #0f172a;
+      --border: #e2e8f0;
+      --border-subtle: #f1f5f9;
+      --border-focus: #3b82f6;
+      --card-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 2px 4px -2px rgba(15, 23, 42, 0.02);
+      --card-shadow-hover: 0 16px 32px -4px rgba(15, 23, 42, 0.08), 0 4px 8px -2px rgba(15, 23, 42, 0.03);
+      --navbar-bg: rgba(255, 255, 255, 0.88);
+      --navbar-border: #e2e8f0;
+
+      /* Table Variables */
+      --table-text: #1e293b;
+      --table-border: #e2e8f0;
+      --table-header-bg: #f8fafc;
+      --table-header-text: #0f172a;
       --table-td-bg: #ffffff;
-      --table-stripe: #f0f7fc;
-      --input-bg: #fff;
-      --input-border: #b8dff0;
-      --input-text: #1e3a5f;
-      --section-title: #0077b6;
-      --hr-color: rgba(0, 119, 182, 0.15);
-      --axis-color: #1e3a5f;
-      --grid-color: rgba(0, 119, 182, 0.08);
-      --toggle-bg: #0096c7;
-      --toggle-icon: "🌙";
+      --table-stripe: #f8fafc;
+      --table-hover: #f1f5f9;
+      --search-highlight: rgba(37, 99, 235, 0.08);
+
+      /* Chart Tokens */
+      --chart-label: #334155;
+      --axis-color: #64748b;
+      --grid-color: rgba(148, 163, 184, 0.15);
+      --chart-card-bg: #ffffff;
+      --chart-card-border: #e2e8f0;
+
+      /* Form & Input */
+      --input-bg: #ffffff;
+      --input-border: #cbd5e1;
+      --input-text: #0f172a;
+
+      /* Radii */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-pill: 9999px;
     }
 
-    /* ===== NIGHT (DARK) MODE — Deep Ocean ===== */
+    /* Night (Dark) Theme */
     [data-theme="night"] {
-      --bg: linear-gradient(135deg, #0a1628 0%, #112240 50%, #0d1f3c 100%);
-      --text: #cad8e8;
-      --heading: #90e0ef;
-      --card-bg: #0d1b30;
-      --card-border: rgba(0, 180, 216, 0.15);
-      --card-shadow: rgba(0, 0, 0, 0.35);
-      --chart-card-bg: rgba(0, 180, 216, 0.08);
-      --chart-card-border: rgba(0, 180, 216, 0.15);
-      --chart-label: #90e0ef;
-      --table-text: #cad8e8;
-      --table-border: rgba(0, 180, 216, 0.2);
-      --table-td-bg: #0e1f3a;
-      --table-stripe: #112a4a;
-      --input-bg: rgba(0, 180, 216, 0.08);
-      --input-border: rgba(0, 180, 216, 0.2);
-      --input-text: #e0f0ff;
-      --section-title: #48cae4;
-      --hr-color: rgba(0, 180, 216, 0.15);
-      --axis-color: #90e0ef;
-      --grid-color: rgba(0, 180, 216, 0.08);
-      --toggle-bg: #ffc107;
-      --toggle-icon: "☀️";
+      --bg: #090d16;
+      --bg-mesh: radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.12) 0px, transparent 50%),
+                 radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%),
+                 #090d16;
+      --surface: #0f172a;
+      --surface-subtle: #131d35;
+      --surface-glass: rgba(15, 23, 42, 0.88);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      --heading: #f8fafc;
+      --border: rgba(148, 163, 184, 0.14);
+      --border-subtle: rgba(148, 163, 184, 0.08);
+      --border-focus: #60a5fa;
+      --card-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      --card-shadow-hover: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.12);
+      --navbar-bg: rgba(9, 13, 22, 0.88);
+      --navbar-border: rgba(148, 163, 184, 0.12);
+
+      /* Table Variables */
+      --table-text: #e2e8f0;
+      --table-border: rgba(148, 163, 184, 0.12);
+      --table-header-bg: #152238;
+      --table-header-text: #f8fafc;
+      --table-td-bg: #0f172a;
+      --table-stripe: #121c32;
+      --table-hover: rgba(56, 189, 248, 0.08);
+      --search-highlight: rgba(56, 189, 248, 0.15);
+
+      /* Chart Tokens */
+      --chart-label: #cbd5e1;
+      --axis-color: #94a3b8;
+      --grid-color: rgba(148, 163, 184, 0.1);
+      --chart-card-bg: #0f172a;
+      --chart-card-border: rgba(148, 163, 184, 0.14);
+
+      /* Form & Input */
+      --input-bg: #131d35;
+      --input-border: rgba(148, 163, 184, 0.22);
+      --input-text: #f8fafc;
+    }
+
+    /* ==========================================================================
+       GLOBAL BASE STYLES
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
     }
 
     body {
-      background: var(--bg);
+      background: var(--bg-mesh);
       background-attachment: fixed;
-      color: var(--text);
-      font-family: 'Inter', 'Segoe UI', sans-serif;
+      color: var(--text-main);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       min-height: 100vh;
-      transition: background 0.4s ease, color 0.3s ease;
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
-    .container {
-      max-width: 1200px;
-    }
-
-    h1 {
+    h1, h2, h3, h4, h5, h6 {
       color: var(--heading);
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      transition: color 0.3s ease;
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
-    /* Toggle button */
-    .theme-toggle {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 1000;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      border: none;
-      background: var(--toggle-bg);
-      color: #fff;
-      font-size: 24px;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-      transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    /* Monospace elements for student roll numbers */
+    .mono-num, td:nth-child(2) {
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -0.01em;
+    }
+
+    /* Focus visible accessibility */
+    :focus-visible {
+      outline: 2px solid var(--border-focus) !important;
+      outline-offset: 2px !important;
+    }
+
+    /* ==========================================================================
+       STICKY NAVBAR
+       ========================================================================== */
+    .app-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1020;
+      background: var(--navbar-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--navbar-border);
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    .navbar-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-md);
+      background: var(--accent-gradient);
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #fff;
+      font-size: 20px;
+      box-shadow: 0 4px 14px var(--primary-glow);
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
     }
 
-    .theme-toggle:hover {
-      transform: scale(1.1);
-      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.3);
+    .brand-wrap:hover .brand-icon {
+      transform: scale(1.05) rotate(-2deg);
     }
 
-    .nav-btns .btn {
-      margin: 4px;
-      border-radius: 20px;
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .version-pill {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--primary-subtle);
+      color: var(--primary);
+      border: 1px solid var(--border);
+      letter-spacing: 0.02em;
+    }
+
+    /* Campus Switcher Control */
+    .campus-segmented {
+      display: inline-flex;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 3px;
+      gap: 4px;
+    }
+
+    .campus-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 16px;
+      border-radius: var(--radius-pill);
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.85rem;
       font-weight: 600;
-      transition: transform .15s, box-shadow .15s;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
 
-    .nav-btns .btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    .campus-tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .campus-tab-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      font-weight: 700;
+    }
+
+    /* Navbar Right Actions */
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-btn-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: var(--card-shadow);
+      transition: all 0.2s ease;
+    }
+
+    .theme-btn-toggle:hover {
+      background: var(--surface-subtle);
+      transform: translateY(-1px);
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .btn-help-link {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .btn-help-link:hover {
+      color: var(--primary);
+      background: var(--surface-subtle);
+    }
+
+    /* ==========================================================================
+       CONTAINER & CARDS
+       ========================================================================== */
+    .main-wrapper {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
     }
 
     .card-glass {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 24px var(--card-shadow);
-      transition: background 0.3s ease, border-color 0.3s ease;
+      background: var(--surface-glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--card-shadow);
+      transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* ==========================================================================
+       HERO & UPLOAD DROPZONE
+       ========================================================================== */
+    .upload-zone-wrapper {
+      margin-bottom: 24px;
+    }
+
+    .dropzone-container {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+
+    .dropzone-container:hover, .dropzone-container.drag-over {
+      border-color: var(--primary);
+      background: var(--primary-subtle);
+      box-shadow: 0 0 0 4px var(--primary-glow);
+    }
+
+    .dropzone-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--primary-subtle);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 16px;
+      transition: transform 0.2s ease;
+    }
+
+    .dropzone-container:hover .dropzone-icon {
+      transform: translateY(-4px) scale(1.05);
+    }
+
+    .dropzone-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--heading);
+    }
+
+    .dropzone-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .badge-format {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: var(--surface-subtle);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    /* Selected File State Banner */
+    .file-preview-strip {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 18px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-top: 16px;
+      text-align: left;
+    }
+
+    .file-preview-strip.active {
+      display: flex;
+    }
+
+    .file-preview-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       overflow: hidden;
     }
 
+    .file-icon-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: #107c41; /* Excel green */
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .file-name-text {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 380px;
+    }
+
+    .file-size-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Active Dataset Header Bar (when results exist) */
+    .active-dataset-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 18px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .dataset-info-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .dataset-badge-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--primary-subtle);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .dataset-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--heading);
+      margin: 0;
+    }
+
+    .dataset-meta {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin: 2px 0 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dataset-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* ==========================================================================
+       BUTTONS SYSTEM
+       ========================================================================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      line-height: 1.25;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff !important;
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+      box-shadow: 0 4px 14px var(--primary-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff !important;
+      border-color: var(--success);
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-success:hover {
+      background: var(--success-hover);
+      border-color: var(--success-hover);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--surface-subtle);
+      color: var(--text-main) !important;
+      border-color: var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+      color: var(--heading) !important;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text-main) !important;
+      border-color: var(--border);
+    }
+
+    .btn-outline:hover {
+      background: var(--surface-subtle);
+      border-color: var(--border-focus);
+      color: var(--primary) !important;
+    }
+
+    .btn-sm {
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .btn-export-pdf {
+      background: var(--surface);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 7px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: var(--card-shadow);
+      transition: all 0.2s ease;
+    }
+
+    .btn-export-pdf:hover {
+      background: var(--surface-subtle);
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    /* ==========================================================================
+       EXAM METADATA NOTIFICATION BANNER
+       ========================================================================== */
+    .metadata-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .metadata-icon {
+      font-size: 1.5rem;
+      color: var(--primary);
+      line-height: 1;
+      margin-top: 2px;
+    }
+
+    .metadata-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--heading);
+      margin-bottom: 4px;
+    }
+
+    .metadata-details {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ==========================================================================
+       KPI METRIC CARDS GRID
+       ========================================================================== */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .kpi-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--card-shadow-hover);
+      border-color: var(--border-focus);
+    }
+
+    .kpi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .kpi-icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .kpi-label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .kpi-value {
+      font-size: 1.85rem;
+      font-weight: 800;
+      color: var(--heading);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .kpi-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* KPI Theme Variants */
+    .kpi-blue .kpi-icon-wrap { background: var(--primary-subtle); color: var(--primary); }
+    .kpi-green .kpi-icon-wrap { background: var(--success-bg); color: var(--success); }
+    .kpi-green .kpi-value { color: var(--success); }
+    .kpi-red .kpi-icon-wrap { background: var(--danger-bg); color: var(--danger); }
+    .kpi-red .kpi-value { color: var(--danger); }
+    .kpi-amber .kpi-icon-wrap { background: var(--warning-bg); color: var(--warning); }
+    .kpi-amber .kpi-value { color: var(--warning); }
+    .kpi-cyan .kpi-icon-wrap { background: var(--info-bg); color: var(--info); }
+    .kpi-violet .kpi-icon-wrap { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+
+    /* ==========================================================================
+       SEGMENTED NAVIGATION TABS
+       ========================================================================== */
+    .tabs-container-wrap {
+      position: sticky;
+      top: 65px;
+      z-index: 1010;
+      background: var(--bg);
+      padding: 10px 0;
+      margin-bottom: 20px;
+      transition: background 0.3s ease;
+    }
+
+    .nav-tabs-segmented {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--card-shadow);
+      scrollbar-width: none; /* Hide scrollbar Firefox */
+    }
+
+    .nav-tabs-segmented::-webkit-scrollbar {
+      display: none; /* Chrome, Safari */
+    }
+
+    .nav-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .nav-tab-btn:hover {
+      color: var(--text-main);
+      background: var(--surface-subtle);
+    }
+
+    .nav-tab-btn.active-tab {
+      background: var(--primary);
+      color: #ffffff !important;
+      font-weight: 700;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .tab-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: var(--radius-pill);
+      background: rgba(0, 0, 0, 0.15);
+      color: inherit;
+    }
+
+    .nav-tab-btn:not(.active-tab) .tab-badge {
+      background: var(--surface-subtle);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    /* ==========================================================================
+       TOOLBAR & SEARCH CONTROLS
+       ========================================================================== */
+    .table-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+      max-width: 440px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 9px 38px 9px 38px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: var(--radius-md);
+      color: var(--input-text);
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: none;
+      font-size: 0.9rem;
+      padding: 0;
+    }
+
+    .search-count-pill {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .table-quick-filters {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-chip {
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .filter-chip:hover {
+      background: var(--surface-subtle);
+      color: var(--text-main);
+    }
+
+    .filter-chip.active {
+      background: var(--primary-subtle);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       DATA TABLES DESIGN
+       ========================================================================== */
+    .table-responsive {
+      border: 1px solid var(--table-border);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      background: var(--table-td-bg);
+      box-shadow: var(--card-shadow);
+      max-height: 720px;
+      position: relative;
+    }
+
+    table, .table {
+      width: 100%;
+      margin-bottom: 0 !important;
+      border-collapse: separate;
+      border-spacing: 0;
+      color: var(--table-text) !important;
+      font-size: 0.86rem;
+    }
+
+    /* Table Sticky Header */
+    .table thead th {
+      background: var(--table-header-bg) !important;
+      color: var(--table-header-text) !important;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.76rem;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--table-border) !important;
+      border-top: none !important;
+      white-space: nowrap;
+      text-align: left;
+    }
+
+    /* Multi-row header support for Main Results */
+    .table thead tr:first-child th {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+    }
+
+    .table thead tr:nth-child(2) th {
+      position: sticky;
+      top: 40px;
+      z-index: 3;
+      border-top: 1px solid var(--table-border) !important;
+    }
+
+    /* Theory and Lab group headers */
+    .table thead tr:first-child th[colspan]:first-of-type {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(2, 132, 199, 0.9)) !important;
+      color: #ffffff !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .table thead tr:first-child th[colspan]:last-of-type {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.9), rgba(6, 182, 212, 0.9)) !important;
+      color: #ffffff !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .table tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--table-border);
+      border-top: none;
+      background: var(--table-td-bg);
+      color: var(--table-text);
+      vertical-align: middle;
+      transition: background 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .table tbody tr:nth-child(even) td {
+      background: var(--table-stripe);
+    }
+
+    .table tbody tr:hover td {
+      background: var(--table-hover) !important;
+    }
+
+    /* Highlight failed / absent grades */
+    .grade-fail, td[data-grade="F"], td[data-grade="AB"] {
+      color: var(--danger) !important;
+      font-weight: 700;
+    }
+
+    .grade-badge-fail {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--danger-bg);
+      color: var(--danger);
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+
+    .grade-badge-pass {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--success-bg);
+      color: var(--success);
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+
+    /* Top 3 rank medals styling */
+    .rank-medal-1 { color: #f59e0b; font-weight: 800; font-size: 1.1rem; }
+    .rank-medal-2 { color: #94a3b8; font-weight: 800; font-size: 1.1rem; }
+    .rank-medal-3 { color: #b45309; font-weight: 800; font-size: 1.1rem; }
+
+    /* ==========================================================================
+       CHARTS VISUALIZATION DESIGN
+       ========================================================================== */
     .chart-card {
       background: var(--chart-card-bg);
       border: 1px solid var(--chart-card-border);
-      border-radius: 16px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-      transition: background 0.3s ease, border-color 0.3s ease;
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--card-shadow);
+      transition: all 0.25s ease;
     }
 
-    .chart-card h5 {
-      color: var(--chart-label);
-      font-size: 0.85rem;
+    .chart-card:hover {
+      box-shadow: var(--card-shadow-hover);
+    }
+
+    .chart-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .chart-card-title {
+      font-size: 0.95rem;
       font-weight: 700;
-      margin-bottom: 10px;
+      color: var(--heading);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .pie-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 20px;
-      margin-bottom: 30px;
+      margin-bottom: 28px;
     }
 
     .bar-wrapper {
-      max-width: 600px;
+      max-width: 650px;
       margin: 0 auto;
     }
 
-    table,
-    .table {
-      color: var(--table-text) !important;
-      background: var(--table-td-bg) !important;
-      border-collapse: collapse;
-      width: 100%;
-      transition: background 0.3s ease, color 0.3s ease;
+    .bar-wrapper-wide {
+      max-width: 100%;
+      height: 380px;
     }
 
-    .table-bordered,
-    .table-bordered th,
-    .table-bordered td {
-      border-color: var(--table-border) !important;
-    }
-
-    .table th {
-      background: linear-gradient(135deg, #0077b6, #00b4d8) !important;
-      color: #fff !important;
-      font-weight: 600;
-    }
-
-    .table td {
-      background: var(--table-td-bg) !important;
-      color: var(--table-text) !important;
-      transition: background 0.3s ease;
-    }
-
-    .table tr:nth-child(even) td {
-      background: var(--table-stripe) !important;
-    }
-
-    .form-control {
-      background: var(--input-bg);
-      border: 1px solid var(--input-border);
-      color: var(--input-text);
-      border-radius: 10px;
-      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-    }
-
-    .form-control:focus {
-      background: var(--input-bg);
-      color: var(--input-text);
-      box-shadow: 0 0 0 3px rgba(0, 119, 182, 0.25);
-      border-color: #0096c7;
-    }
-
+    /* Section Headers */
     .section-title {
-      color: var(--section-title);
-      font-weight: 700;
-      margin: 25px 0 15px;
-      transition: color 0.3s ease;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--heading);
+      margin: 0 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .table-responsive {
-      overflow-x: auto;
-      background: var(--table-td-bg);
-      border-radius: 12px;
-      transition: background 0.3s ease;
+    /* ==========================================================================
+       SHEET SELECTOR (Multi-sheet workbooks)
+       ========================================================================== */
+    .sheet-selector-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: var(--card-shadow);
     }
 
-    /* Charts button fix for light mode */
-    .btn-outline-dark {
-      border-color: var(--text);
-      color: var(--text);
+    .sheet-options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
     }
 
-    .btn-outline-dark:hover {
-      background: var(--text);
-      color: var(--card-bg);
-    }
-
-    .btn-export-pdf {
-      background: linear-gradient(135deg, #0077b6, #00b4d8);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 8px 18px;
+    .sheet-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface-subtle);
+      color: var(--text-main);
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.92rem;
       cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 2px 8px rgba(0, 119, 182, 0.2);
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .sheet-btn:hover {
+      background: var(--primary-subtle);
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--card-shadow);
+    }
+
+    /* ==========================================================================
+       EMPTY STATES & ALERTS
+       ========================================================================== */
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      color: var(--text-subtle);
       margin-bottom: 12px;
     }
 
-    .btn-export-pdf:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 16px rgba(0, 119, 182, 0.3);
+    .empty-state-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--heading);
+      margin-bottom: 6px;
     }
 
-    /* ===== RESPONSIVE DESIGN ===== */
+    .empty-state-desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .alert-custom {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: var(--danger);
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    /* ==========================================================================
+       TOAST NOTIFICATIONS
+       ========================================================================== */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast-item {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ==========================================================================
+       PROGRESS SPINNER OVERLAY
+       ========================================================================== */
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      backdrop-filter: blur(8px);
+      transition: opacity 0.4s ease;
+    }
+
+    .spinner-ring {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      border: 3px solid var(--border);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ==========================================================================
+       FOOTER
+       ========================================================================== */
+    .app-footer {
+      border-top: 1px solid var(--border);
+      padding: 24px 20px;
+      text-align: center;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       RESPONSIVE REFINEMENTS
+       ========================================================================== */
+    @media (max-width: 992px) {
+      .navbar-inner { padding: 10px 16px; }
+      .kpi-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+      .pie-grid { grid-template-columns: 1fr 1fr; }
+    }
+
     @media (max-width: 768px) {
-      .container { padding-left: 10px; padding-right: 10px; }
-      h1 { font-size: 1.4rem; }
-      .card-glass { padding: 12px; border-radius: 12px; }
-      .nav-btns .btn { font-size: 0.75rem; padding: 6px 10px; margin: 3px; }
-      .table th, .table td { font-size: 0.75rem; padding: 6px 8px !important; white-space: nowrap; }
-      .btn-export-pdf { font-size: 0.75rem; padding: 6px 12px; }
-      .pie-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
-      .theme-toggle { width: 44px; height: 44px; font-size: 20px; top: 12px; right: 12px; }
+      .main-wrapper { padding: 16px 12px 40px; }
+      .card-glass { padding: 16px; }
+      .navbar-inner { flex-wrap: wrap; }
+      .brand-title { font-size: 1.05rem; }
+      .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .kpi-value { font-size: 1.45rem; }
+      .pie-grid { grid-template-columns: 1fr; }
+      .table-toolbar { flex-direction: column; align-items: stretch; }
+      .search-input-wrap { max-width: 100%; }
+      .table-responsive { max-height: 520px; }
+      .table thead th, .table tbody td { padding: 8px 10px; font-size: 0.78rem; }
+      .btn { font-size: 0.82rem; padding: 8px 14px; }
+      .dataset-actions { width: 100%; justify-content: flex-start; }
     }
 
     @media (max-width: 480px) {
-      h1 { font-size: 1.1rem; }
-      .nav-btns .btn { font-size: 0.7rem; padding: 5px 8px; }
-      .pie-grid { grid-template-columns: 1fr; }
-      .card-glass { padding: 10px; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .campus-segmented { width: 100%; justify-content: center; }
     }
   </style>
+
+  <!-- Essential Helper Scripts -->
   <script>
+    // Tab Switching
     function show(id) {
-      ["main", "rank", "pass", "failed", "charts"].forEach(x => document.getElementById(x).style.display = "none");
-      document.getElementById(id).style.display = "block";
+      ["main", "rank", "pass", "failed", "charts", "detailed-charts"].forEach(x => {
+        var el = document.getElementById(x);
+        if (el) el.style.display = "none";
+      });
+      var target = document.getElementById(id);
+      if (target) {
+        target.style.display = "block";
+      }
+
+      // Update active tab styling
+      document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active-tab'));
+      var clickedBtn = document.querySelector('[data-tab="' + id + '"]');
+      if (clickedBtn) {
+        clickedBtn.classList.add('active-tab');
+      }
+
+      // Scroll into view if tab was clicked
+      if (window.innerWidth < 768 && target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
+    // Campus Switcher
+    function selectCampus(name) {
+      document.querySelectorAll('.campus-tab-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
+      var btn = document.getElementById('btnCampus' + name);
+      if (btn) btn.classList.add('active');
+
+      var badge = document.getElementById('campusBadge');
+      if (badge) badge.textContent = name;
+
+      var campusInput = document.getElementById('campusInput');
+      if (campusInput) campusInput.value = name;
+
+      var btnExcel = document.getElementById('btnDetailedExcel');
+      if (btnExcel) {
+        btnExcel.innerHTML = '<i class="bi bi-file-earmark-spreadsheet"></i> ' + name + ' Excel Report';
+      }
+
+      try {
+        localStorage.setItem('selectedCampus', name);
+      } catch (e) {}
+    }
+
+    // PDF Export Functionality
     function exportPDF(sectionId, filename) {
       var el = document.getElementById(sectionId);
-      // Hide export button during PDF capture
+      if (!el) return;
+
       var btn = el.querySelector('.btn-export-pdf');
-      if (btn) btn.style.display = 'none';
+      var originalBtnText = '';
+      if (btn) {
+        originalBtnText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating PDF...';
+        btn.disabled = true;
+      }
+
+      showToast("Preparing PDF export...", "info");
 
       var opt = {
-        margin:       [10, 5, 10, 5],
-        filename:     filename + '.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
-        jsPDF:        { unit: 'mm', format: 'a3', orientation: 'landscape' }
+        margin: [10, 8, 10, 8],
+        filename: filename + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
       };
 
       html2pdf().set(opt).from(el).save().then(function () {
-        if (btn) btn.style.display = '';
+        if (btn) {
+          btn.innerHTML = originalBtnText;
+          btn.disabled = false;
+        }
+        showToast("PDF exported successfully! 🎉", "success");
+      }).catch(function(err) {
+        if (btn) {
+          btn.innerHTML = originalBtnText;
+          btn.disabled = false;
+        }
+        showToast("PDF generation failed. Please try again.", "danger");
       });
     }
 
-    // Store all chart instances for dynamic theme updates
+    // Chart instances storage for dynamic theme update
     var allPieCharts = [];
     var barChartInstance = null;
+    var distributionChart = null;
+    var topPerformersChart = null;
+    var sgpaDistChart = null;
+    var failureAnalysisChart = null;
+    var subjectPassBarChart = null;
 
     function getThemeColors() {
       var s = getComputedStyle(document.documentElement);
       return {
-        label: s.getPropertyValue('--chart-label').trim(),
-        axis: s.getPropertyValue('--axis-color').trim(),
-        grid: s.getPropertyValue('--grid-color').trim()
+        label: s.getPropertyValue('--chart-label').trim() || '#334155',
+        axis: s.getPropertyValue('--axis-color').trim() || '#64748b',
+        grid: s.getPropertyValue('--grid-color').trim() || 'rgba(148, 163, 184, 0.15)'
       };
     }
 
-    function updateChartColors() {
+    function updateAllChartColors() {
       var c = getThemeColors();
-      // Update pie chart legends
       allPieCharts.forEach(function (chart) {
-        chart.options.plugins.legend.labels.color = c.label;
-        chart.update();
+        if (chart && chart.options && chart.options.plugins && chart.options.plugins.legend) {
+          chart.options.plugins.legend.labels.color = c.label;
+          chart.update();
+        }
       });
-      // Update bar chart axes + grid
-      if (barChartInstance) {
-        barChartInstance.options.scales.y.ticks.color = c.axis;
-        barChartInstance.options.scales.y.grid.color = c.grid;
-        barChartInstance.options.scales.x.ticks.color = c.axis;
-        barChartInstance.update();
-      }
+      [barChartInstance, distributionChart, topPerformersChart, sgpaDistChart, failureAnalysisChart, subjectPassBarChart].forEach(function(chart) {
+        if (chart) {
+          if (chart.options.scales && chart.options.scales.y) {
+            if (chart.options.scales.y.ticks) chart.options.scales.y.ticks.color = c.axis;
+            if (chart.options.scales.y.grid) chart.options.scales.y.grid.color = c.grid;
+          }
+          if (chart.options.scales && chart.options.scales.x) {
+            if (chart.options.scales.x.ticks) chart.options.scales.x.ticks.color = c.axis;
+            if (chart.options.scales.x.grid) chart.options.scales.x.grid.color = c.grid;
+          }
+          chart.update();
+        }
+      });
     }
 
     function toggleTheme() {
       var html = document.documentElement;
       var btn = document.getElementById("themeToggle");
-      if (html.getAttribute("data-theme") === "night") {
-        html.removeAttribute("data-theme");
-        btn.textContent = "🌙";
+      var current = html.getAttribute("data-theme");
+      if (current === "night") {
+        html.setAttribute("data-theme", "morning");
+        if (btn) btn.innerHTML = '<i class="bi bi-moon-stars"></i>';
         localStorage.setItem("theme", "morning");
+        showToast("Switched to Light Theme", "info");
       } else {
         html.setAttribute("data-theme", "night");
-        btn.textContent = "☀️";
+        if (btn) btn.innerHTML = '<i class="bi bi-sun"></i>';
         localStorage.setItem("theme", "night");
+        showToast("Switched to Dark Theme", "info");
       }
-      // Re-apply chart colors after theme switch
-      setTimeout(updateChartColors, 50);
+      setTimeout(updateAllChartColors, 60);
     }
 
-    // Apply saved theme on load
+    // Apply saved theme immediately
     (function () {
       var saved = localStorage.getItem("theme");
       if (saved === "night") {
         document.documentElement.setAttribute("data-theme", "night");
+      } else {
+        document.documentElement.setAttribute("data-theme", "morning");
       }
     })();
+
+    // Table Search
+    function searchTable(inputId, tableContainerId) {
+      var input = document.getElementById(inputId);
+      var container = document.getElementById(tableContainerId);
+      if (!input || !container) return;
+
+      var filter = input.value.toLowerCase().trim();
+      var rows = container.querySelectorAll('tbody tr');
+      var count = 0;
+      var clearBtn = document.getElementById(inputId + '-clear');
+
+      if (clearBtn) {
+        clearBtn.style.display = filter ? 'block' : 'none';
+      }
+
+      rows.forEach(function(row) {
+        var text = row.textContent.toLowerCase();
+        if (filter === '' || text.indexOf(filter) > -1) {
+          row.style.display = '';
+          count++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      var countEl = document.getElementById(inputId + '-count');
+      if (countEl) {
+        countEl.textContent = filter ? count + ' matches found' : '';
+      }
+    }
+
+    function clearSearch(inputId, tableContainerId) {
+      var input = document.getElementById(inputId);
+      if (input) {
+        input.value = '';
+        searchTable(inputId, tableContainerId);
+        input.focus();
+      }
+    }
+
+    // Quick Filters for Table (All / Passed / Failed)
+    function applyTableFilter(tableContainerId, filterType, activeChip) {
+      var container = document.getElementById(tableContainerId);
+      if (!container) return;
+
+      var parentBar = activeChip ? activeChip.parentElement : null;
+      if (parentBar) {
+        parentBar.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        if (activeChip) activeChip.classList.add('active');
+      }
+
+      var rows = container.querySelectorAll('tbody tr');
+      rows.forEach(function(row) {
+        if (filterType === 'all') {
+          row.style.display = '';
+        } else if (filterType === 'failed') {
+          // Check if row contains 'F' or '-' or fail indicator
+          var text = row.textContent;
+          if (text.includes('-') || text.includes(' F ') || text.includes('FAIL') || text.includes('AB')) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        } else if (filterType === 'passed') {
+          var text = row.textContent;
+          if (!text.includes('-') && !text.includes(' F ') && !text.includes('FAIL') && !text.includes('AB')) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        }
+      });
+    }
+
+    // Toast notification utility
+    function showToast(message, type) {
+      var container = document.getElementById("toastContainer");
+      if (!container) return;
+
+      var toast = document.createElement("div");
+      toast.className = "toast-item";
+      var icon = type === 'success' ? 'bi-check-circle-fill text-success' :
+                 type === 'danger' ? 'bi-exclamation-triangle-fill text-danger' :
+                 'bi-info-circle-fill text-primary';
+      toast.innerHTML = '<i class="bi ' + icon + '"></i><span>' + message + '</span>';
+      container.appendChild(toast);
+
+      setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(function() { toast.remove(); }, 300);
+      }, 3500);
+    }
   </script>
 </head>
 
 <body>
-  <!-- Loading Spinner Overlay — shown instantly, hidden after page loads -->
-  <div id="loadingOverlay" style="
-    position:fixed;inset:0;z-index:9999;
-    display:flex;align-items:center;justify-content:center;
-    background:var(--bg);transition:opacity .4s ease;
-  ">
+  <!-- Initial Page Loading Overlay -->
+  <div id="loadingOverlay">
     <div style="text-align:center;">
-      <div style="
-        width:48px;height:48px;margin:0 auto 16px;
-        border:4px solid rgba(0,119,182,0.2);
-        border-top:4px solid #0096c7;
-        border-radius:50%;
-        animation:spin .8s linear infinite;
-      "></div>
-      <p style="color:var(--text);font-family:'Inter',sans-serif;font-weight:600;font-size:1rem;margin:0;">
-        Loading Analyzer...
+      <div class="spinner-ring"></div>
+      <p style="color:var(--text-main);font-weight:700;font-size:1.05rem;margin:0;">
+        Loading JNTU Topper Analyzer...
       </p>
+      <span style="font-size:0.82rem;color:var(--text-muted);">Preparing data tables & visual engine</span>
     </div>
   </div>
-  <style>
-    @keyframes spin {
-      to {
-        transform: rotate(360deg)
-      }
-    }
-  </style>
 
-  <!-- Theme Toggle Button -->
-  <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()">🌙</button>
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
 
-  <div class="container py-4">
-    <h1 class="text-center mb-4">🎓 JNTU Topper Analyzer V2</h1>
+  <!-- Sticky Top Navigation Bar -->
+  <nav class="app-navbar">
+    <div class="navbar-inner">
+      <!-- Brand & Campus Status -->
+      <a href="/" class="brand-wrap">
+        <div class="brand-icon">
+          <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <div>
+          <h1 class="brand-title">
+            JNTU Topper Analyzer
+            <span class="version-pill">v2.0</span>
+          </h1>
+          <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;">
+            <i class="bi bi-building"></i> <span id="campusBadge">{{ campus|default('AVIH') }}</span> Campus Edition
+          </span>
+        </div>
+      </a>
 
-    <div class="card-glass">
-      <form method="POST" enctype="multipart/form-data" class="d-flex align-items-center gap-2 flex-wrap">
-        <input type="file" name="file" required class="form-control" style="max-width:400px">
-        <button class="btn btn-primary">⬆ Upload</button>
-        <a href="/download" class="btn btn-success">⬇ Download Excel</a>
-      </form>
-    </div>
+      <!-- Campus Segmented Switcher -->
+      <div class="campus-segmented">
+        <button type="button" class="campus-tab-btn {% if campus != 'ASRA' %}active{% endif %}" id="btnCampusAVIH" onclick="selectCampus('AVIH')">
+          <i class="bi bi-bank"></i> AVIH
+        </button>
+        <button type="button" class="campus-tab-btn {% if campus == 'ASRA' %}active{% endif %}" id="btnCampusASRA" onclick="selectCampus('ASRA')">
+          <i class="bi bi-bank2"></i> ASRA
+        </button>
+      </div>
 
-    <div class="nav-btns text-center mb-3">
-      <button onclick="show('main')" class="btn btn-secondary">📋 Main List</button>
-      <button onclick="show('rank')" class="btn btn-info">🏆 Rankwise List</button>
-      <button onclick="show('pass')" class="btn btn-warning">✅ Subject Pass %</button>
-      <button onclick="show('failed')" class="btn btn-danger">❌ Failed Students</button>
-      <button onclick="show('charts')" class="btn btn-outline-dark">📊 Charts</button>
-    </div>
-
-    <div id="main" class="card-glass">
-      {% if tables.result %}<button class="btn-export-pdf" onclick="exportPDF('main','Main_List')">📄 Export PDF</button>{% endif %}
-      <div class="table-responsive">{{ tables.result|safe }}</div>
-    </div>
-    <div id="rank" style="display:none" class="card-glass">
-      {% if tables.rank_marks %}<button class="btn-export-pdf" onclick="exportPDF('rank','Rankwise_List')">📄 Export PDF</button>{% endif %}
-      <h3 class="section-title">Rank by Marks</h3>
-      <div class="table-responsive">{{ tables.rank_marks|safe }}</div>
-      <h3 class="section-title">Rank by SGPA</h3>
-      <div class="table-responsive">{{ tables.rank_sgpa|safe }}</div>
-    </div>
-    <div id="pass" style="display:none" class="card-glass">
-      {% if tables.subject_pass %}<button class="btn-export-pdf" onclick="exportPDF('pass','Subject_Pass_Percentage')">📄 Export PDF</button>{% endif %}
-      <div class="table-responsive">{{ tables.subject_pass|safe }}</div>
-    </div>
-    <div id="failed" style="display:none" class="card-glass">
-      {% if tables.failed %}<button class="btn-export-pdf" onclick="exportPDF('failed','Failed_Students')">📄 Export PDF</button>{% endif %}
-      <div class="table-responsive">{{ tables.failed|safe }}</div>
-    </div>
-
-    <!-- CHARTS SECTION -->
-    <div id="charts" style="display:none" class="card-glass">
-      {% if tables.result %}<button class="btn-export-pdf" onclick="exportPDF('charts','Charts')">📄 Export PDF</button>{% endif %}
-      <h3 class="section-title text-center">📊 Subject-wise Pass Percentage (Pie Charts)</h3>
-      <div id="pie-container" class="pie-grid"></div>
-      <hr style="border-color:var(--hr-color)">
-      <h3 class="section-title text-center">📈 Overall Pass vs Failed (Bar Chart)</h3>
-      <div class="bar-wrapper chart-card">
-        <canvas id="barChart"></canvas>
+      <!-- Actions: Theme Switcher & GitHub -->
+      <div class="nav-actions">
+        <button id="themeToggle" class="theme-btn-toggle" onclick="toggleTheme()" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">
+          <i class="bi bi-moon-stars"></i>
+        </button>
+        <a href="https://github.com/saikrishnajanga/jntuh-markslist-v2.0" target="_blank" rel="noopener noreferrer" class="btn-help-link" title="View Source on GitHub">
+          <i class="bi bi-github"></i>
+        </a>
       </div>
     </div>
-  </div>
+  </nav>
+
+  <main class="main-wrapper">
+    <!-- Active File Action Bar (shown when results exist) -->
+    {% if tables.result %}
+    <div class="active-dataset-bar">
+      <div class="dataset-info-group">
+        <div class="dataset-badge-icon">
+          <i class="bi bi-file-earmark-check-fill"></i>
+        </div>
+        <div>
+          <h3 class="dataset-title">Analysis Completed & Ready</h3>
+          <p class="dataset-meta">
+            <span><i class="bi bi-people-fill"></i> {{ kpi.total_students if kpi else 'Students' }} Enrolled</span> •
+            <span><i class="bi bi-journal-bookmark-fill"></i> {{ kpi.total_subjects if kpi else 'Subjects' }} Tracked</span> •
+            <span class="text-success"><i class="bi bi-shield-check"></i> {{ kpi.pass_percentage if kpi else '0' }}% Passed</span>
+          </p>
+        </div>
+      </div>
+      <div class="dataset-actions">
+        <a href="/download_detailed" id="btnDetailedExcel" class="btn btn-primary">
+          <i class="bi bi-file-earmark-spreadsheet"></i> {{ campus|default('AVIH') }} Detailed Excel
+        </a>
+        <a href="/download" class="btn btn-secondary">
+          <i class="bi bi-download"></i> Clean Excel
+        </a>
+        <button type="button" class="btn btn-outline" onclick="toggleUploadDrawer()">
+          <i class="bi bi-cloud-arrow-up"></i> Analyze New File
+        </button>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Upload Section -->
+    <div class="upload-zone-wrapper" id="uploadDrawer" style="{% if tables.result %}display:none;{% endif %}">
+      <div class="card-glass">
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+          <input type="hidden" name="campus" id="campusInput" value="{{ campus|default('AVIH') }}">
+          <input type="file" name="file" accept=".xlsx,.xls" required id="fileInput" style="display:none">
+
+          <!-- Drag and Drop Target -->
+          <div class="dropzone-container" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <div class="dropzone-icon">
+              <i class="bi bi-cloud-arrow-up-fill"></i>
+            </div>
+            <h3 class="dropzone-title">Upload JNTUH Markslist Excel</h3>
+            <p class="dropzone-desc">Drag and drop your exam results workbook here, or click to browse</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+              <span class="badge-format"><i class="bi bi-filetype-xlsx"></i> .XLSX</span>
+              <span class="badge-format"><i class="bi bi-filetype-xls"></i> .XLS</span>
+              <span class="badge-format"><i class="bi bi-shield-lock"></i> Max 16MB</span>
+            </div>
+            <div class="mt-3">
+              <a href="/demo" class="text-primary fw-semibold text-decoration-none" style="font-size:0.86rem;" onclick="event.stopPropagation()">
+                <i class="bi bi-play-circle-fill"></i> Want to test immediately? Load sample results preview &rarr;
+              </a>
+            </div>
+
+            <!-- File preview strip -->
+            <div class="file-preview-strip" id="filePreviewStrip" onclick="event.stopPropagation()">
+              <div class="file-preview-info">
+                <div class="file-icon-badge">
+                  <i class="bi bi-file-earmark-spreadsheet"></i>
+                </div>
+                <div>
+                  <div class="file-name-text" id="previewFileName">filename.xlsx</div>
+                  <div class="file-size-text" id="previewFileSize">0 KB</div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline text-danger" onclick="clearSelectedFile(event)">
+                <i class="bi bi-trash3"></i> Remove
+              </button>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+            <span style="font-size:0.82rem;color:var(--text-muted);">
+              <i class="bi bi-info-circle"></i> Supports standard JNTUH result formats with auto-header detection.
+            </span>
+            <div class="d-flex gap-2">
+              {% if tables.result %}
+              <button type="button" class="btn btn-secondary" onclick="toggleUploadDrawer()">Cancel</button>
+              {% endif %}
+              <button type="submit" class="btn btn-primary" id="uploadBtn">
+                <i class="bi bi-lightning-charge-fill"></i> Upload & Process Results
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Progress Indicator -->
+        <div id="uploadProgress" style="display:none;margin-top:16px;">
+          <div style="background:var(--surface-subtle);border-radius:var(--radius-pill);height:8px;overflow:hidden;margin-bottom:8px;">
+            <div style="width:100%;height:100%;background:var(--accent-gradient);animation:indeterminate 1.5s infinite linear;transform-origin:0% 50%;"></div>
+          </div>
+          <div class="d-flex justify-content-between font-monospace" style="font-size:0.8rem;color:var(--text-muted);">
+            <span><i class="bi bi-gear-wide-connected"></i> Ingesting worksheet & computing rankings...</span>
+            <span>Please wait</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Message Alert -->
+    {% if error_msg %}
+    <div class="alert-custom">
+      <i class="bi bi-exclamation-octagon-fill" style="font-size:1.25rem;"></i>
+      <div>
+        <strong>Processing Error:</strong> {{ error_msg }}
+        <div style="font-size:0.84rem;margin-top:4px;opacity:0.9;">
+          Please make sure the uploaded workbook contains valid student exam columns (HTNO, Subject Marks, etc.).
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Multi-Sheet Selector -->
+    {% if sheet_names %}
+    <div class="sheet-selector-card">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <i class="bi bi-collection-fill text-primary" style="font-size:1.4rem;"></i>
+        <h4 style="margin:0;">Multiple Worksheets Detected</h4>
+      </div>
+      <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:12px;">
+        This workbook has multiple sheets. Please choose the worksheet containing the student results:
+      </p>
+      <form method="POST" enctype="multipart/form-data">
+        <div class="sheet-options-grid">
+          {% for sheet in sheet_names %}
+          <button type="submit" name="sheet_select" value="{{ loop.index0 }}" class="sheet-btn">
+            <i class="bi bi-table text-primary"></i>
+            <span>{{ sheet }}</span>
+          </button>
+          {% endfor %}
+        </div>
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- Exam Metadata Banner -->
+    {% if metadata and metadata.exam_title %}
+    <div class="metadata-card">
+      <div class="metadata-icon">
+        <i class="bi bi-info-circle-fill"></i>
+      </div>
+      <div>
+        <div class="metadata-title">{{ metadata.exam_title }}</div>
+        <div class="metadata-details">
+          {% if metadata.recount_info %}
+          <span class="meta-tag"><i class="bi bi-clock-history"></i> {{ metadata.recount_info }}</span>
+          {% endif %}
+          {% if metadata.exam_info %}
+          <span class="meta-tag"><i class="bi bi-globe"></i> Portal Registration Available</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- KPI Dashboard Metrics -->
+    {% if kpi %}
+    <div class="kpi-grid" id="kpiDashboard">
+      <!-- Total Students -->
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-top">
+          <span class="kpi-label">Total Students</span>
+          <div class="kpi-icon-wrap"><i class="bi bi-people-fill"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpi.total_students }}</div>
+        <div class="kpi-sub"><i class="bi bi-person-check"></i> Registered for exam</div>
+      </div>
+
+      <!-- Total Subjects -->
+      <div class="kpi-card kpi-cyan">
+        <div class="kpi-top">
+          <span class="kpi-label">Total Subjects</span>
+          <div class="kpi-icon-wrap"><i class="bi bi-journal-text"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpi.total_subjects }}</div>
+        <div class="kpi-sub"><i class="bi bi-book"></i> Theory & Labs evaluated</div>
+      </div>
+
+      <!-- Passed Students -->
+      <div class="kpi-card kpi-green">
+        <div class="kpi-top">
+          <span class="kpi-label">Passed</span>
+          <div class="kpi-icon-wrap"><i class="bi bi-check2-circle"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpi.passed_students }}</div>
+        <div class="kpi-sub"><i class="bi bi-trophy"></i> Cleared all subjects</div>
+      </div>
+
+      <!-- Failed Students -->
+      <div class="kpi-card kpi-red">
+        <div class="kpi-top">
+          <span class="kpi-label">Failed</span>
+          <div class="kpi-icon-wrap"><i class="bi bi-x-circle"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpi.failed_students }}</div>
+        <div class="kpi-sub"><i class="bi bi-exclamation-triangle"></i> Has 1+ backlogs</div>
+      </div>
+
+      <!-- Pass Rate Percentage -->
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-top">
+          <span class="kpi-label">Pass Percentage</span>
+          <div class="kpi-icon-wrap"><i class="bi bi-graph-up-arrow"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpi.pass_percentage }}%</div>
+        <div class="kpi-sub">
+          <div style="background:var(--surface-subtle);border-radius:var(--radius-pill);height:6px;width:100%;overflow:hidden;margin-top:4px;">
+            <div style="width:{{ kpi.pass_percentage }}%;height:100%;background:var(--success);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Backlogs -->
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-top">
+          <span class="kpi-label">Total Backlogs</span>
+          <div class="kpi-icon-wrap"><i class="bi bi-bookmark-x-fill"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpi.total_backlogs }}</div>
+        <div class="kpi-sub"><i class="bi bi-file-earmark-diff"></i> Across all students</div>
+      </div>
+
+      <!-- Average Marks -->
+      {% if kpi.avg_marks is defined %}
+      <div class="kpi-card kpi-cyan">
+        <div class="kpi-top">
+          <span class="kpi-label">Average Marks</span>
+          <div class="kpi-icon-wrap"><i class="bi bi-calculator"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpi.avg_marks }}</div>
+        <div class="kpi-sub"><i class="bi bi-bar-chart-line"></i> Class average score</div>
+      </div>
+      {% endif %}
+
+      <!-- Highest Marks -->
+      {% if kpi.highest_marks is defined %}
+      <div class="kpi-card kpi-amber">
+        <div class="kpi-top">
+          <span class="kpi-label">Highest Marks</span>
+          <div class="kpi-icon-wrap"><i class="bi bi-award-fill"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpi.highest_marks }}</div>
+        <div class="kpi-sub"><i class="bi bi-star-fill"></i> Top class performer</div>
+      </div>
+      {% endif %}
+
+      <!-- Highest SGPA -->
+      {% if kpi.highest_sgpa is defined %}
+      <div class="kpi-card kpi-violet">
+        <div class="kpi-top">
+          <span class="kpi-label">Highest SGPA</span>
+          <div class="kpi-icon-wrap"><i class="bi bi-stars"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpi.highest_sgpa }}</div>
+        <div class="kpi-sub"><i class="bi bi-gem"></i> Grade point peak</div>
+      </div>
+      {% endif %}
+
+      <!-- Average SGPA -->
+      {% if kpi.avg_sgpa is defined %}
+      <div class="kpi-card kpi-blue">
+        <div class="kpi-top">
+          <span class="kpi-label">Average SGPA</span>
+          <div class="kpi-icon-wrap"><i class="bi bi-pie-chart-fill"></i></div>
+        </div>
+        <div class="kpi-value">{{ kpi.avg_sgpa }}</div>
+        <div class="kpi-sub"><i class="bi bi-compass"></i> Aggregate GPA</div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Segmented Navigation Tabs Bar -->
+    {% if tables.result %}
+    <div class="tabs-container-wrap">
+      <div class="nav-tabs-segmented">
+        <button onclick="show('main')" class="nav-tab-btn active-tab" data-tab="main">
+          <i class="bi bi-table"></i>
+          <span>Main Results</span>
+        </button>
+        <button onclick="show('rank')" class="nav-tab-btn" data-tab="rank">
+          <i class="bi bi-trophy-fill"></i>
+          <span>Rankings</span>
+        </button>
+        <button onclick="show('pass')" class="nav-tab-btn" data-tab="pass">
+          <i class="bi bi-check2-all"></i>
+          <span>Subject Pass %</span>
+        </button>
+        <button onclick="show('failed')" class="nav-tab-btn" data-tab="failed">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span>Failed Students</span>
+          {% if kpi and kpi.failed_students > 0 %}
+          <span class="tab-badge text-danger">{{ kpi.failed_students }}</span>
+          {% endif %}
+        </button>
+        <button onclick="show('charts')" class="nav-tab-btn" data-tab="charts">
+          <i class="bi bi-pie-chart-fill"></i>
+          <span>Subject Doughnuts</span>
+        </button>
+        <button onclick="show('detailed-charts')" class="nav-tab-btn" data-tab="detailed-charts">
+          <i class="bi bi-bar-chart-steps"></i>
+          <span>Performance Analytics</span>
+        </button>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- 1. MAIN RESULTS TABLE SECTION -->
+    <section id="main" class="card-glass" style="{% if not tables.result %}display:none;{% endif %}">
+      {% if tables.result %}
+      <div class="table-toolbar">
+        <div class="search-input-wrap">
+          <i class="bi bi-search search-icon"></i>
+          <input type="text" id="searchMain" class="search-input" placeholder="Search by HTNO, marks, percentage..."
+                 oninput="searchTable('searchMain','mainTableWrap')">
+          <button type="button" id="searchMain-clear" class="search-clear-btn" onclick="clearSearch('searchMain','mainTableWrap')">
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <div class="table-quick-filters">
+            <span class="filter-chip active" onclick="applyTableFilter('mainTableWrap','all',this)">All Students</span>
+            <span class="filter-chip" onclick="applyTableFilter('mainTableWrap','passed',this)">Passed</span>
+            <span class="filter-chip" onclick="applyTableFilter('mainTableWrap','failed',this)">Backlogs</span>
+          </div>
+          <span id="searchMain-count" class="search-count-pill"></span>
+          <button class="btn-export-pdf" onclick="exportPDF('main','Main_Results_List')">
+            <i class="bi bi-file-earmark-pdf"></i> Export PDF
+          </button>
+        </div>
+      </div>
+      <div class="table-responsive" id="mainTableWrap">
+        {{ tables.result|safe }}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="bi bi-file-earmark-spreadsheet"></i></div>
+        <h4 class="empty-state-title">No Exam Results Loaded Yet</h4>
+        <p class="empty-state-desc">Upload a JNTUH Excel marksheet above to generate comprehensive rankings, subject statistics, and interactive charts.</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- 2. RANK TABLES SECTION -->
+    <section id="rank" style="display:none" class="card-glass">
+      {% if tables.rank_marks %}
+      <div class="table-toolbar">
+        <div class="search-input-wrap">
+          <i class="bi bi-search search-icon"></i>
+          <input type="text" id="searchRank" class="search-input" placeholder="Filter student rankings..."
+                 oninput="searchTable('searchRank','rankTableWrap')">
+          <button type="button" id="searchRank-clear" class="search-clear-btn" onclick="clearSearch('searchRank','rankTableWrap')">
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span id="searchRank-count" class="search-count-pill"></span>
+          <button class="btn-export-pdf" onclick="exportPDF('rank','Student_Rankings')">
+            <i class="bi bi-file-earmark-pdf"></i> Export PDF
+          </button>
+        </div>
+      </div>
+
+      <div id="rankTableWrap">
+        <div class="mb-4">
+          <h3 class="section-title"><i class="bi bi-award-fill text-warning"></i> Rank by Total Marks</h3>
+          <div class="table-responsive">{{ tables.rank_marks|safe }}</div>
+        </div>
+
+        <div>
+          <h3 class="section-title"><i class="bi bi-stars text-primary"></i> Rank by SGPA</h3>
+          <div class="table-responsive">{{ tables.rank_sgpa|safe }}</div>
+        </div>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- 3. SUBJECT PASS % TABLE SECTION -->
+    <section id="pass" style="display:none" class="card-glass">
+      {% if tables.subject_pass %}
+      <div class="table-toolbar">
+        <div class="search-input-wrap">
+          <i class="bi bi-search search-icon"></i>
+          <input type="text" id="searchPass" class="search-input" placeholder="Search subjects..."
+                 oninput="searchTable('searchPass','passTableWrap')">
+          <button type="button" id="searchPass-clear" class="search-clear-btn" onclick="clearSearch('searchPass','passTableWrap')">
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span id="searchPass-count" class="search-count-pill"></span>
+          <button class="btn-export-pdf" onclick="exportPDF('pass','Subject_Pass_Analysis')">
+            <i class="bi bi-file-earmark-pdf"></i> Export PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive" id="passTableWrap">
+        {{ tables.subject_pass|safe }}
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- 4. FAILED STUDENTS TABLE SECTION -->
+    <section id="failed" style="display:none" class="card-glass">
+      {% if tables.failed %}
+      <div class="table-toolbar">
+        <div class="search-input-wrap">
+          <i class="bi bi-search search-icon"></i>
+          <input type="text" id="searchFailed" class="search-input" placeholder="Search failed students by HTNO or subject..."
+                 oninput="searchTable('searchFailed','failedTableWrap')">
+          <button type="button" id="searchFailed-clear" class="search-clear-btn" onclick="clearSearch('searchFailed','failedTableWrap')">
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span id="searchFailed-count" class="search-count-pill"></span>
+          <button class="btn-export-pdf" onclick="exportPDF('failed','Failed_Students_Backlogs')">
+            <i class="bi bi-file-earmark-pdf"></i> Export PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive" id="failedTableWrap">
+        {{ tables.failed|safe }}
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- 5. SUBJECT DOUGHNUTS SECTION -->
+    <section id="charts" style="display:none" class="card-glass">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h3 class="section-title mb-0"><i class="bi bi-pie-chart-fill text-primary"></i> Subject-wise Pass Percentage</h3>
+        {% if tables.result %}
+        <button class="btn-export-pdf" onclick="exportPDF('charts','Subject_Doughnut_Charts')">
+          <i class="bi bi-file-earmark-pdf"></i> Export PDF
+        </button>
+        {% endif %}
+      </div>
+      <div id="pie-container" class="pie-grid"></div>
+
+      <div class="mt-4 pt-3 border-top">
+        <h3 class="section-title text-center"><i class="bi bi-bar-chart-fill text-primary"></i> Overall Pass vs Failed Students</h3>
+        <div class="bar-wrapper chart-card mt-3">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. DETAILED ANALYTICS SECTION -->
+    <section id="detailed-charts" style="display:none" class="card-glass">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h3 class="section-title mb-0" id="analyticsTitle">
+          <i class="bi bi-bar-chart-steps text-primary"></i> Comprehensive Statistical Performance
+        </h3>
+        {% if tables.result %}
+        <button class="btn-export-pdf" onclick="exportPDF('detailed-charts','Performance_Analytics')">
+          <i class="bi bi-file-earmark-pdf"></i> Export PDF
+        </button>
+        {% endif %}
+      </div>
+
+      <!-- Subject Pass % Bar Chart -->
+      <div class="chart-card mb-4">
+        <div class="chart-card-header">
+          <h4 class="chart-card-title"><i class="bi bi-graph-up text-primary"></i> Subject-wise Pass Percentage Comparison</h4>
+        </div>
+        <div class="bar-wrapper-wide">
+          <canvas id="subjectPassBar"></canvas>
+        </div>
+      </div>
+
+      <!-- Marks Distribution -->
+      <div class="chart-card mb-4">
+        <div class="chart-card-header">
+          <h4 class="chart-card-title"><i class="bi bi-histogram text-primary"></i> Student Marks Distribution Histogram</h4>
+        </div>
+        <div class="bar-wrapper-wide">
+          <canvas id="distributionChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Top Performers -->
+      <div class="chart-card mb-4">
+        <div class="chart-card-header">
+          <h4 class="chart-card-title"><i class="bi bi-trophy-fill text-warning"></i> Top 10 High Achievers</h4>
+        </div>
+        <div class="bar-wrapper-wide">
+          <canvas id="topPerformersChart"></canvas>
+        </div>
+      </div>
+
+      <!-- SGPA Distribution -->
+      <div class="chart-card mb-4" id="sgpaDistContainer">
+        <div class="chart-card-header">
+          <h4 class="chart-card-title"><i class="bi bi-star-half text-violet"></i> SGPA Grade Point Distribution</h4>
+        </div>
+        <div class="bar-wrapper-wide">
+          <canvas id="sgpaDistChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Subject Failure Analysis -->
+      <div class="chart-card mb-4">
+        <div class="chart-card-header">
+          <h4 class="chart-card-title"><i class="bi bi-exclamation-octagon text-danger"></i> Subject Failure & Backlogs Breakdown</h4>
+        </div>
+        <div class="bar-wrapper-wide">
+          <canvas id="failureAnalysisChart"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <strong>JNTU Topper Analyzer V2.0</strong> — Designed for Academic Excellence.
+      </div>
+      <div>
+        Made with ❤️ by <a href="https://github.com/saikrishnajanga" target="_blank" rel="noopener noreferrer" style="color:var(--primary);text-decoration:none;font-weight:600;">Sai Krishna Janga</a>
+      </div>
+    </div>
+  </footer>
 
   <script>
+    // Toggle Upload Drawer when results exist
+    function toggleUploadDrawer() {
+      var drawer = document.getElementById("uploadDrawer");
+      if (drawer) {
+        if (drawer.style.display === "none") {
+          drawer.style.display = "block";
+          drawer.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          drawer.style.display = "none";
+        }
+      }
+    }
+
+    // Drag and drop file handling
+    var fileInput = document.getElementById("fileInput");
+    var dropZone = document.getElementById("dropZone");
+    var previewStrip = document.getElementById("filePreviewStrip");
+
+    if (dropZone && fileInput) {
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.add('drag-over');
+        }, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          dropZone.classList.remove('drag-over');
+        }, false);
+      });
+
+      dropZone.addEventListener('drop', function(e) {
+        var dt = e.dataTransfer;
+        var files = dt.files;
+        if (files && files.length > 0) {
+          fileInput.files = files;
+          updateFilePreview(files[0]);
+        }
+      });
+
+      fileInput.addEventListener('change', function() {
+        if (fileInput.files && fileInput.files.length > 0) {
+          updateFilePreview(fileInput.files[0]);
+        }
+      });
+    }
+
+    function updateFilePreview(file) {
+      if (!file) return;
+      var nameEl = document.getElementById("previewFileName");
+      var sizeEl = document.getElementById("previewFileSize");
+      if (nameEl) nameEl.textContent = file.name;
+      if (sizeEl) {
+        var kb = (file.size / 1024).toFixed(1);
+        sizeEl.textContent = kb > 1024 ? (kb / 1024).toFixed(2) + ' MB' : kb + ' KB';
+      }
+      if (previewStrip) previewStrip.classList.add('active');
+    }
+
+    function clearSelectedFile(e) {
+      if (e) e.stopPropagation();
+      if (fileInput) fileInput.value = '';
+      if (previewStrip) previewStrip.classList.remove('active');
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
-      // Hide loading overlay with fade
+      // Fade out loading overlay
       var overlay = document.getElementById("loadingOverlay");
       if (overlay) {
         overlay.style.opacity = "0";
-        setTimeout(function () { overlay.remove(); }, 400);
+        setTimeout(function () { overlay.remove(); }, 350);
       }
 
-      // Set toggle button text based on saved theme
+      // Initialize Theme button icon
       var saved = localStorage.getItem("theme");
-      if (saved === "night") {
-        document.getElementById("themeToggle").textContent = "☀️";
+      var btn = document.getElementById("themeToggle");
+      if (saved === "night" && btn) {
+        btn.innerHTML = '<i class="bi bi-sun"></i>';
       }
 
-      var chartData = {{ chart_data| safe
-    }};
-    if (!chartData) return;
+      // Initialize Campus Selection
+      var serverCampus = "{{ campus|default('') }}";
+      var savedCampus = "";
+      try { savedCampus = localStorage.getItem('selectedCampus') || ""; } catch(e) {}
+      var initialCampus = serverCampus || savedCampus || 'AVIH';
+      selectCampus(initialCampus);
 
-    var c = getThemeColors();
+      // Upload progress indicator on submit
+      var form = document.getElementById("uploadForm");
+      if (form) {
+        form.addEventListener("submit", function() {
+          if (fileInput && fileInput.files.length > 0) {
+            var prog = document.getElementById("uploadProgress");
+            if (prog) prog.style.display = "block";
+            var uploadBtn = document.getElementById("uploadBtn");
+            if (uploadBtn) {
+              uploadBtn.disabled = true;
+              uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Processing Worksheet...';
+            }
+          }
+        });
+      }
 
-    // --- PIE CHARTS ---
-    var container = document.getElementById("pie-container");
-    var passPalette = ["#0077b6", "#0096c7", "#00b4d8", "#48cae4", "#0088cc", "#0099dd", "#00a5e0", "#0072a3"];
-    var failPalette = ["#ef5350", "#e53935", "#f06292", "#e57373", "#ff7043", "#ff8a65", "#ec407a", "#d32f2f"];
+      // Style Table rows (Format Medals, HTNOs, and Backlog indicators)
+      function polishTableMarkup() {
+        // Highlight Rank medals in rank tables
+        var rankMarksWrap = document.querySelector("#rank table");
+        if (rankMarksWrap) {
+          var rows = rankMarksWrap.querySelectorAll("tbody tr");
+          rows.forEach(function(row, idx) {
+            var firstCell = row.cells[0];
+            if (firstCell) {
+              if (idx === 0) firstCell.innerHTML = '<span class="rank-medal-1">🥇 1</span>';
+              else if (idx === 1) firstCell.innerHTML = '<span class="rank-medal-2">🥈 2</span>';
+              else if (idx === 2) firstCell.innerHTML = '<span class="rank-medal-3">🥉 3</span>';
+            }
+          });
+        }
 
-    chartData.subjects.forEach(function (subj, i) {
-      var div = document.createElement("div");
-      div.className = "chart-card";
-      div.innerHTML = '<h5>' + subj.name + '</h5><canvas id="pie-' + i + '"></canvas>';
-      container.appendChild(div);
+        // Add badges for '-' missing / failed marks
+        document.querySelectorAll("#mainTableWrap table tbody td").forEach(function(td) {
+          var txt = td.textContent.trim();
+          if (txt === '-' || txt === 'F' || txt === 'AB') {
+            td.innerHTML = '<span class="grade-badge-fail">' + txt + '</span>';
+          }
+        });
 
-      var passColor = passPalette[i % passPalette.length];
-      var failColor = failPalette[i % failPalette.length];
+        // Enhance Failed Students Table (Backlog count pill & subject chips)
+        var failedTable = document.querySelector("#failedTableWrap table");
+        if (failedTable) {
+          failedTable.querySelectorAll("tbody tr").forEach(function(row) {
+            // Failed subjects (Col 2)
+            var subjCell = row.cells[2];
+            if (subjCell) {
+              var subjs = subjCell.textContent.split(',');
+              var chips = subjs.map(function(s) {
+                var trimmed = s.trim();
+                return trimmed ? '<span class="badge" style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border);margin:2px;font-size:0.75rem;padding:4px 8px;border-radius:6px;display:inline-block;">' + trimmed + '</span>' : '';
+              }).join(' ');
+              subjCell.innerHTML = chips;
+            }
+            // Backlog count (Col 3)
+            var countCell = row.cells[3];
+            if (countCell) {
+              var count = countCell.textContent.trim();
+              countCell.innerHTML = '<span class="badge" style="background:var(--danger);color:#fff;font-weight:700;font-size:0.78rem;padding:4px 10px;border-radius:99px;"><i class="bi bi-exclamation-triangle-fill"></i> ' + count + ' Backlogs</span>';
+            }
+          });
+        }
 
-      var pieChart = new Chart(document.getElementById("pie-" + i), {
-        type: "doughnut",
-        data: {
-          labels: ["Pass (" + subj.passed + ")", "Fail (" + subj.failed + ")"],
-          datasets: [{
-            data: [subj.passed, subj.failed],
-            backgroundColor: [passColor, failColor],
-            borderWidth: 0,
-            hoverOffset: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          cutout: "55%",
-          plugins: {
-            legend: {
-              position: "bottom",
-              labels: { color: c.label, font: { size: 12, weight: "bold" } }
+        // Enhance Subject Pass % Table with Mini Progress Bars
+        var passTable = document.querySelector("#passTableWrap table");
+        if (passTable) {
+          passTable.querySelectorAll("tbody tr").forEach(function(row) {
+            var pctCell = row.cells[4]; // Pass %
+            if (pctCell) {
+              var pct = parseFloat(pctCell.textContent);
+              if (!isNaN(pct)) {
+                var color = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--danger)';
+                pctCell.innerHTML = '<div style="display:flex;align-items:center;gap:10px;">' +
+                  '<span style="font-weight:700;min-width:48px;">' + pct.toFixed(1) + '%</span>' +
+                  '<div style="flex:1;min-width:60px;max-width:110px;background:var(--surface-subtle);height:6px;border-radius:99px;overflow:hidden;border:1px solid var(--border);">' +
+                  '<div style="width:' + pct + '%;height:100%;background:' + color + ';"></div>' +
+                  '</div></div>';
+              }
+            }
+          });
+        }
+      }
+      polishTableMarkup();
+
+      // CHART INITIALIZATION
+      var chartData = {{ chart_data|safe }};
+      if (!chartData) return;
+
+      var c = getThemeColors();
+
+      // Palette
+      var passPalette = ["#0284c7", "#0ea5e9", "#06b6d4", "#10b981", "#3b82f6", "#6366f1", "#8b5cf6", "#14b8a6"];
+      var failPalette = ["#ef4444", "#f43f5e", "#e11d48", "#be123c", "#f97316", "#ea580c", "#dc2626", "#b91c1c"];
+      var gradientPalette = ["#2563eb", "#0284c7", "#0ea5e9", "#06b6d4", "#14b8a6", "#10b981", "#8b5cf6", "#6366f1"];
+
+      // 1. Subject Doughnut Charts
+      var container = document.getElementById("pie-container");
+      if (container && chartData.subjects) {
+        chartData.subjects.forEach(function (subj, i) {
+          var div = document.createElement("div");
+          div.className = "chart-card";
+          div.innerHTML = '<div class="chart-card-header"><h5 class="chart-card-title">' + subj.name + '</h5></div><canvas id="pie-' + i + '"></canvas>';
+          container.appendChild(div);
+
+          var passColor = passPalette[i % passPalette.length];
+          var failColor = failPalette[i % failPalette.length];
+
+          var pieChart = new Chart(document.getElementById("pie-" + i), {
+            type: "doughnut",
+            data: {
+              labels: ["Pass (" + subj.passed + ")", "Fail (" + subj.failed + ")"],
+              datasets: [{
+                data: [subj.passed, subj.failed],
+                backgroundColor: [passColor, failColor],
+                borderWidth: 0,
+                hoverOffset: 6
+              }]
             },
-            tooltip: {
-              callbacks: {
-                label: function (ctx) {
-                  var total = subj.passed + subj.failed;
-                  var pct = ((ctx.raw / total) * 100).toFixed(1);
-                  return ctx.label + " — " + pct + "%";
+            options: {
+              responsive: true,
+              cutout: "60%",
+              plugins: {
+                legend: {
+                  position: "bottom",
+                  labels: { color: c.label, font: { size: 11, weight: "bold", family: 'Inter' } }
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function (ctx) {
+                      var total = subj.passed + subj.failed;
+                      var pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                      return ctx.label + " — " + pct + "%";
+                    }
+                  }
+                }
+              }
+            }
+          });
+          allPieCharts.push(pieChart);
+        });
+      }
+
+      // 2. Bar Chart (Pass vs Fail)
+      var barCanvas = document.getElementById("barChart");
+      if (barCanvas && chartData.overall) {
+        barChartInstance = new Chart(barCanvas, {
+          type: "bar",
+          data: {
+            labels: ["Passed Students", "Failed Students"],
+            datasets: [{
+              label: "Count",
+              data: [chartData.overall.passed, chartData.overall.failed],
+              backgroundColor: ["rgba(16, 185, 129, 0.85)", "rgba(239, 68, 68, 0.85)"],
+              borderColor: ["#10b981", "#ef4444"],
+              borderWidth: 1.5,
+              borderRadius: 8,
+              barPercentage: 0.45
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: { beginAtZero: true, ticks: { color: c.axis, font: { weight: "600" } }, grid: { color: c.grid } },
+              x: { ticks: { color: c.axis, font: { size: 13, weight: "700" } }, grid: { display: false } }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function (ctx) {
+                    var total = chartData.overall.passed + chartData.overall.failed;
+                    var pct = total > 0 ? ((ctx.raw / total) * 100).toFixed(1) : 0;
+                    return ctx.raw + " students (" + pct + "%)";
+                  }
                 }
               }
             }
           }
-        }
-      });
-      allPieCharts.push(pieChart);
-    });
+        });
+      }
 
-    // --- BAR CHART ---
-    barChartInstance = new Chart(document.getElementById("barChart"), {
-      type: "bar",
-      data: {
-        labels: ["Passed", "Failed"],
-        datasets: [{
-          label: "Students",
-          data: [chartData.overall.passed, chartData.overall.failed],
-          backgroundColor: ["rgba(0,150,199,0.85)", "rgba(239,83,80,0.85)"],
-          borderColor: ["#0096c7", "#ef5350"],
-          borderWidth: 2,
-          borderRadius: 8,
-          barPercentage: 0.5
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { beginAtZero: true, ticks: { color: c.axis, font: { size: 12, weight: "bold" } }, grid: { color: c.grid } },
-          x: { ticks: { color: c.axis, font: { size: 14, weight: "bold" } }, grid: { display: false } }
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: function (ctx) {
-                var total = chartData.overall.passed + chartData.overall.failed;
-                var pct = ((ctx.raw / total) * 100).toFixed(1);
-                return ctx.raw + " students (" + pct + "%)";
+      // 3. Subject Pass % Horizontal Bar Chart
+      var subPassCanvas = document.getElementById("subjectPassBar");
+      if (subPassCanvas && chartData.subjects && chartData.subjects.length > 0) {
+        var subLabels = chartData.subjects.map(function(s) {
+          return s.name.length > 28 ? s.name.substring(0,25) + '...' : s.name;
+        });
+        var subPassPct = chartData.subjects.map(function(s) { return s.pass_pct; });
+        var subColors = subPassPct.map(function(p) {
+          if (p >= 80) return 'rgba(16, 185, 129, 0.85)';
+          if (p >= 60) return 'rgba(14, 165, 233, 0.85)';
+          if (p >= 40) return 'rgba(245, 158, 11, 0.85)';
+          return 'rgba(239, 68, 68, 0.85)';
+        });
+
+        subjectPassBarChart = new Chart(subPassCanvas, {
+          type: "bar",
+          data: {
+            labels: subLabels,
+            datasets: [{
+              label: "Pass %",
+              data: subPassPct,
+              backgroundColor: subColors,
+              borderRadius: 6,
+              barPercentage: 0.65
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { beginAtZero: true, max: 100, ticks: { color: c.axis, callback: function(v) { return v+'%'; } }, grid: { color: c.grid } },
+              y: { ticks: { color: c.axis, font: { size: 11, weight: '600' } }, grid: { display: false } }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  title: function(ctx) { return chartData.subjects[ctx[0].dataIndex].name; },
+                  label: function(ctx) {
+                    var s = chartData.subjects[ctx.dataIndex];
+                    return 'Pass: ' + s.passed + ' | Fail: ' + s.failed + ' (' + s.pass_pct + '%)';
+                  }
+                }
               }
             }
           }
-        }
+        });
       }
-    });
+
+      // 4. Marks Distribution Histogram
+      var distCanvas = document.getElementById("distributionChart");
+      if (distCanvas && chartData.distribution) {
+        distributionChart = new Chart(distCanvas, {
+          type: "bar",
+          data: {
+            labels: chartData.distribution.labels,
+            datasets: [{
+              label: "Students",
+              data: chartData.distribution.counts,
+              backgroundColor: chartData.distribution.counts.map(function(_, i) {
+                return gradientPalette[i % gradientPalette.length] + 'dd';
+              }),
+              borderRadius: 6,
+              barPercentage: 0.8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, ticks: { color: c.axis, stepSize: 1, font: { weight: "600" } }, grid: { color: c.grid } },
+              x: { ticks: { color: c.axis, font: { size: 11 } }, grid: { display: false } }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) { return ctx.raw + ' student' + (ctx.raw !== 1 ? 's' : ''); }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // 5. Top 10 Performers
+      var tpCanvas = document.getElementById("topPerformersChart");
+      if (tpCanvas && chartData.top_performers) {
+        topPerformersChart = new Chart(tpCanvas, {
+          type: "bar",
+          data: {
+            labels: chartData.top_performers.labels,
+            datasets: [{
+              label: "Total Marks",
+              data: chartData.top_performers.marks,
+              backgroundColor: chartData.top_performers.marks.map(function(_, i) {
+                var colors = ['#f59e0b','#94a3b8','#b45309','#2563eb','#0284c7','#0ea5e9','#06b6d4','#10b981','#8b5cf6','#6366f1'];
+                return colors[i] || '#2563eb';
+              }),
+              borderRadius: 6,
+              barPercentage: 0.65
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, ticks: { color: c.axis, font: { weight: "600" } }, grid: { color: c.grid } },
+              x: { ticks: { color: c.axis, font: { size: 10, weight: '600' }, maxRotation: 45 }, grid: { display: false } }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    var tip = 'Marks: ' + ctx.raw;
+                    if (chartData.top_performers.sgpa) {
+                      tip += ' | SGPA: ' + chartData.top_performers.sgpa[ctx.dataIndex];
+                    }
+                    return tip;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // 6. SGPA Distribution
+      var sgpaCanvas = document.getElementById("sgpaDistChart");
+      if (sgpaCanvas && chartData.sgpa_distribution) {
+        sgpaDistChart = new Chart(sgpaCanvas, {
+          type: "bar",
+          data: {
+            labels: chartData.sgpa_distribution.labels,
+            datasets: [{
+              label: "Students",
+              data: chartData.sgpa_distribution.counts,
+              backgroundColor: ["#ef4444","#f97316","#f59e0b","#eab308","#84cc16","#10b981","#06b6d4","#2563eb"],
+              borderRadius: 6,
+              barPercentage: 0.75
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, ticks: { color: c.axis, stepSize: 1, font: { weight: "600" } }, grid: { color: c.grid } },
+              x: { ticks: { color: c.axis, font: { size: 11, weight: '600' } }, grid: { display: false } }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) { return ctx.raw + ' student' + (ctx.raw !== 1 ? 's' : '') + ' in SGPA range ' + ctx.label; }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // 7. Failure Analysis
+      var failCanvas = document.getElementById("failureAnalysisChart");
+      if (failCanvas && chartData.failure_analysis && chartData.failure_analysis.failed_counts.some(function(v) { return v > 0; })) {
+        failureAnalysisChart = new Chart(failCanvas, {
+          type: "bar",
+          data: {
+            labels: chartData.failure_analysis.labels.map(function(s) {
+              return s.length > 28 ? s.substring(0,25) + '...' : s;
+            }),
+            datasets: [{
+              label: "Failed Students",
+              data: chartData.failure_analysis.failed_counts,
+              backgroundColor: chartData.failure_analysis.failed_counts.map(function(v) {
+                if (v === 0) return 'rgba(16, 185, 129, 0.7)';
+                if (v <= 5) return 'rgba(245, 158, 11, 0.8)';
+                return 'rgba(239, 68, 68, 0.85)';
+              }),
+              borderRadius: 6,
+              barPercentage: 0.65
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { beginAtZero: true, ticks: { color: c.axis, stepSize: 1 }, grid: { color: c.grid } },
+              y: { ticks: { color: c.axis, font: { size: 11, weight: '600' } }, grid: { display: false } }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  title: function(ctx) { return chartData.failure_analysis.labels[ctx[0].dataIndex]; },
+                  label: function(ctx) {
+                    return ctx.raw + ' failed (' + chartData.failure_analysis.failure_pct[ctx.dataIndex] + '%)';
+                  }
+                }
+              }
+            }
+          }
+        });
+      } else if (failCanvas) {
+        failCanvas.parentElement.parentElement.innerHTML = '<div class="chart-card-header"><h4 class="chart-card-title"><i class="bi bi-shield-check text-success"></i> Subject Failure Analysis</h4></div><div class="empty-state py-4"><i class="bi bi-check-circle-fill text-success" style="font-size:2.5rem;"></i><h5 class="mt-2 mb-1">Zero Subject Failures!</h5><p class="text-muted mb-0">Every student passed in all evaluated subjects 🎉</p></div>';
+      }
     });
   </script>
 </body>
